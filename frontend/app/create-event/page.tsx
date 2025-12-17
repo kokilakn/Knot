@@ -62,13 +62,13 @@ function IconArrowRight() {
 }
 
 export default function CreateEventPage() {
-    const [photos, setPhotos] = useState<string[]>([]);
+    const [photo, setPhoto] = useState<string | null>(null);
     const [dateValue, setDateValue] = useState('');
     const [isDateFocused, setIsDateFocused] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleAddPhotoClick = () => {
-        if (photos.length >= 3) return;
+        if (photo) return;
         fileInputRef.current?.click();
     };
 
@@ -76,16 +76,14 @@ export default function CreateEventPage() {
         const files = e.target.files;
         if (files && files[0]) {
             const newPhotoUrl = URL.createObjectURL(files[0]);
-            setPhotos([...photos, newPhotoUrl]);
+            setPhoto(newPhotoUrl);
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
-    const handleRemovePhoto = (index: number) => {
-        URL.revokeObjectURL(photos[index]);
-        const newPhotos = [...photos];
-        newPhotos.splice(index, 1);
-        setPhotos(newPhotos);
+    const handleRemovePhoto = () => {
+        if (photo) URL.revokeObjectURL(photo);
+        setPhoto(null);
     };
 
     const openDatePicker = () => {
@@ -185,30 +183,30 @@ export default function CreateEventPage() {
                                     onChange={handleFileChange}
                                 />
 
-                                {photos.length < 3 && (
+                                {!photo && (
                                     <button type="button" className={styles.addBtn} onClick={handleAddPhotoClick}>
                                         <div className={styles.addBtnIcon}><IconAddPhoto /></div>
                                         <span className={styles.addBtnText}>Add</span>
                                     </button>
                                 )}
 
-                                {photos.map((photo, index) => (
-                                    <div key={index} className={styles.photoOption}>
+                                {photo && (
+                                    <div className={styles.photoOption}>
                                         <img
                                             src={photo}
-                                            alt={`Cover preview ${index + 1}`}
+                                            alt="Cover preview"
                                             className={styles.photoImg}
                                         />
                                         <div
                                             className={styles.removeOverlay}
-                                            onClick={() => handleRemovePhoto(index)}
+                                            onClick={handleRemovePhoto}
                                             title="Remove photo"
                                             role="button"
                                         >
                                             <IconRemove />
                                         </div>
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
 

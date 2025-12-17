@@ -48,20 +48,15 @@ export default function EventPage() {
                     </button>
                 </header>
 
+                <div
+                    className={styles.backgroundOverlay}
+                    style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDg69gGD12xuf6pNQeB5PRSlY4n_NW-UaY9LZxBqYNpyjbKd8txI7EMm5ncxRtvioIPIVAgBUFlPkmQ0AmkNhB2XLO42rVL1pbXpgf9kRKcBivS3hiNdH2XFgwlLngsQhyRYMQeHtR2LwhBGUArQYtBjJa0g4yWgOeA6uNXTsFbTUpy9iAUG15sXIMUcCetjFtlPwslOtT_t2weU4wmGmPnGXaUQC1wdaMY5qUWIu0w8StR0WRWtklwfpf8ZKWtA12QDXYn1RD34MK4")' }}
+                />
+
                 <section className={styles.eventHeader}>
                     <p className={styles.eventSubtitle}>October 14, 2023</p>
                     <h1 className={styles.eventTitle}>Kok's Wedding</h1>
                 </section>
-
-                <div className={styles.heroContainer}>
-                    <div className={styles.heroImageWrapper}>
-                        <div
-                            className={styles.heroImage}
-                            style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDg69gGD12xuf6pNQeB5PRSlY4n_NW-UaY9LZxBqYNpyjbKd8txI7EMm5ncxRtvioIPIVAgBUFlPkmQ0AmkNhB2XLO42rVL1pbXpgf9kRKcBivS3hiNdH2XFgwlLngsQhyRYMQeHtR2LwhBGUArQYtBjJa0g4yWgOeA6uNXTsFbTUpy9iAUG15sXIMUcCetjFtlPwslOtT_t2weU4wmGmPnGXaUQC1wdaMY5qUWIu0w8StR0WRWtklwfpf8ZKWtA12QDXYn1RD34MK4")' }}
-                            aria-label="Abstract soft focus floral arrangement in white and cream tones"
-                        />
-                    </div>
-                </div>
 
                 <main className={styles.main}>
                     <ActionCard

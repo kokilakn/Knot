@@ -4,11 +4,21 @@ import PaperBackground from '@/components/PaperBackground';
 import ActionCard from '@/components/dashboard/ActionCard';
 import styles from './dashboard.module.css';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 function IconPlus() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconNotification() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M18 8A6 6 0 106 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -34,40 +44,7 @@ function IconAlbum() {
   );
 }
 
-function IconArrow() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
-function IconNotification() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M18 8A6 6 0 106 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconHome() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M3 12l9-8 9 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M5 10v9a1 1 0 001 1h12a1 1 0 001-1v-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconProfile() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -81,12 +58,12 @@ export default function DashboardPage() {
             <button className={styles.iconBtn} aria-label="Notifications">
               <IconNotification />
             </button>
-            <div className={styles.avatar}>
+            <Link href="/profile" className={styles.avatar}>
               <img
                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
                 alt="User avatar"
               />
-            </div>
+            </Link>
           </div>
         </header>
 
@@ -118,17 +95,6 @@ export default function DashboardPage() {
             onClick={() => router.push('/events')}
           />
         </main>
-
-        <nav className={styles.bottomNav} aria-label="Main navigation">
-          <div className={styles.navPill}>
-            <button className={`${styles.navBtn} ${styles.navBtnActive}`} aria-label="Home">
-              <IconHome />
-            </button>
-            <button className={styles.navBtn} aria-label="Profile">
-              <IconProfile />
-            </button>
-          </div>
-        </nav>
       </div>
     </PaperBackground>
   );

@@ -1,10 +1,18 @@
 'use client';
 import { Button } from '@/components/ui';
 import styles from './LoginForm.module.css';
+import { useRouter } from 'next/navigation';
 
 export default function LoginForm() {
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push('/dashboard');
+  };
+
   return (
-    <form className={styles.form} autoComplete="off" onSubmit={e => e.preventDefault()}>
+    <form className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
       <div className={styles.fieldGroup}>
         <input
           id="email"
