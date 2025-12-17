@@ -1,0 +1,165 @@
+/* Inherit container and spacing from dashboard theme */
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    padding: var(--space-2xl) var(--space-lg);
+    position: relative;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xl);
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.logo {
+    font-family: var(--font-serif);
+    font-size: 3.5rem;
+    /* Match Dashboard */
+    font-weight: 500;
+    color: var(--color-primary-dark);
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.iconBtn {
+    width: 2rem;
+    /* Match Dashboard iconBtn size */
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--text-primary);
+    transition: background-color var(--transition-fast);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.iconBtn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Event Title Section (Matches Dashboard Greeting) */
+.eventHeader {
+    margin-bottom: var(--space-xl);
+    padding-left: 0.25rem;
+}
+
+/* Date Date/Subtitle matching greetingTime */
+.eventSubtitle {
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    color: var(--text-subtle);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    margin-bottom: var(--space-xs);
+    text-transform: uppercase;
+}
+
+/* Event Name matching greetingMessage */
+.eventTitle {
+    font-family: var(--font-serif);
+    font-size: 3rem;
+    /* Slightly larger for Event Title? Dashboard is 2rem. Let's stick to Dashboard 2rem or maybe 2.5rem for specific event title impact. User said "Kok's Wedding" - title is important. create-event uses 3rem. Dashboard uses 2rem. I will use 3rem to match Create Event title impact, or 2.5. Let's go with 3rem for elegance */
+    font-size: 3rem;
+    font-weight: 400;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+/* Hero Image */
+.heroContainer {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2.35/1;
+    /* Widescreen cinematic to save visual space */
+    margin-bottom: var(--space-xl);
+    border-radius: var(--radius-sm);
+    /* Using minimal radius like reference/dashboard */
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    /* Subtle shadow like dashboard cards */
+    background-color: var(--bg-surface);
+    padding: 0.5rem;
+    /* Frame effect */
+}
+
+.heroImageWrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 2px;
+}
+
+.heroImage {
+    width: 100%;
+    height: 100%;
+    background-position: center;
+    background-size: cover;
+}
+
+/* Main Content */
+.main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    flex: 1;
+}
+
+/* Bottom Navigation - Pill Style (Matches Dashboard) */
+.bottomNav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    padding: var(--space-xl) 0;
+    /* Match dashboard padding */
+    pointer-events: none;
+    z-index: 10;
+}
+
+.navPill {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xl);
+    background: var(--color-paper);
+    border-radius: 9999px;
+    padding: var(--space-md) var(--space-xl);
+    box-shadow: var(--shadow-floating-nav);
+    pointer-events: auto;
+}
+
+.navBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-subtle);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.navBtn:hover {
+    color: var(--color-accent);
+}
+
+.navBtnActive {
+    color: var(--color-logo);
+}

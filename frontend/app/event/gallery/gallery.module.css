@@ -1,0 +1,65 @@
+.container {
+    min-height: 100vh;
+    padding: var(--space-lg);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: var(--space-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.title {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    color: var(--text-primary);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-md);
+}
+
+.imageCard {
+    aspect-ratio: 1;
+    background-color: var(--bg-surface);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+}
+
+.imageCard:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.iconBtn {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.iconBtn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}

@@ -1,0 +1,23 @@
+.guest {
+  width: 100%;
+  margin-top: 2.5rem;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1.01rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border: 2px solid var(--color-ink);
+  border-radius: 0.22rem;
+  padding: 0.95rem 0;
+  transition: background 0.18s, color 0.18s, border 0.18s;
+  box-shadow: none;
+}
+
+.guest:hover,
+.guest:focus {
+  background: var(--color-ink);
+  color: #fff;
+  border-color: var(--color-ink);
+}

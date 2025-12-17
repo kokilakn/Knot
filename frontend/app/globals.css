@@ -1,35 +1,313 @@
+@import '../styles/design-system.css';
+
+/* ==========================================================================
+   Global Resets
+   ========================================================================== */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html,
-body {
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+
+html {
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--color-border);
 }
 
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background-color: var(--color-border);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Apply paper texture to html and body backgrounds */
+html,
+body {
+  position: relative;
+}
+
+html::before,
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  mix-blend-mode: multiply;
+}
+
+/* ==========================================================================
+   Paper Texture System (CSS-only)
+   
+   Usage:
+   - Apply .paper-texture to any element
+   - Optionally set --paper-base-color to change the underlying color
+   - Texture is subtle and production-ready
+   ========================================================================== */
+
+.paper-texture {
+  --paper-base-color: var(--color-border);
+  background-color: var(--paper-base-color);
+  position: relative;
+}
+
+.paper-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  mix-blend-mode: multiply;
+}
+
+/* Ensure content sits above texture */
+.paper-texture>* {
+  position: relative;
+  z-index: 2;
+}
+
+/* ==========================================================================
+
+/* Utility: Apply paper texture to all buttons (including .btn, .google, etc.) */
+button,
+.btn,
+.google {
+  position: relative;
+  background-color: var(--color-paper);
+}
+
+button::before,
+.btn::before,
+.google::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  mix-blend-mode: multiply;
+  z-index: 1;
+}
+
+button>*,
+.btn>*,
+.google>* {
+  position: relative;
+  z-index: 2;
+}
+
+Paper Texture Variants==========================================================================*/
+
+/* Accent colored paper texture */
+.paper-texture--accent {
+  --paper-base-color: var(--color-accent);
+}
+
+/* Ink colored paper texture */
+.paper-texture--ink {
+  --paper-base-color: var(--color-ink);
+}
+
+/* Surface (card) - no texture per design spec */
+.paper-texture--surface {
+  --paper-base-color: var(--color-surface);
+}
+
+.paper-texture--surface::before {
+  display: none;
+}
+
+/* ==========================================================================
+   Utility Classes for Colors
+   ========================================================================== */
+
+/* Background utilities */
+.bg-paper {
+  background-color: var(--bg-paper);
+}
+
+.bg-surface {
+  background-color: var(--bg-surface);
+}
+
+.bg-accent {
+  background-color: var(--bg-accent);
+}
+
+.bg-ink {
+  background-color: var(--bg-ink);
+}
+
+/* Text utilities */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-subtle {
+  color: var(--text-subtle);
+}
+
+.text-on-accent {
+  color: var(--text-on-accent);
+}
+
+.text-on-ink {
+  color: var(--text-on-ink);
+}
+
+/* Border utilities */
+.border-default {
+  border-color: var(--border-default);
+}
+
+.border-accent {
+  border-color: var(--border-accent);
+}
+
+.border-ink {
+  border-color: var(--border-ink);
+}
+
+/* ==========================================================================
+   Base Element Styles
+   ========================================================================== */
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-ink);
+}
+
+/* Remove default button styles - buttons should use component classes */
 button {
   cursor: pointer;
   border: none;
-  font-size: 1rem;
-  padding: 10px 20px;
-  border-radius: 4px;
-  background-color: #0070f3;
-  color: white;
-  transition: background-color 0.2s;
-}
-
-button:hover {
-  background-color: #0051cc;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
 }
 
 button:disabled {
-  background-color: #ccc;
   cursor: not-allowed;
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Animation Utilities
+   ========================================================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+/* Stagger delays */
+.animate-delay-1 {
+  animation-delay: 150ms;
+}
+
+.animate-delay-2 {
+  animation-delay: 250ms;
+}
+
+.animate-delay-3 {
+  animation-delay: 350ms;
+}
+
+.animate-delay-4 {
+  animation-delay: 450ms;
+}
+
+/* ==========================================================================
+   Floating Label Input System
+   ========================================================================== */
+
+.floating-input-group {
+  position: relative;
+  margin-bottom: var(--space-lg);
+}
+
+.floating-input {
+  display: block;
+  width: 100%;
+  padding: var(--space-sm) 0;
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--color-border);
+  outline: none;
+  transition: border-color var(--transition-base);
+}
+
+.floating-input:focus {
+  border-bottom-color: var(--color-primary-dark);
+}
+
+.floating-input::placeholder {
+  color: transparent;
+}
+
+.floating-label {
+  position: absolute;
+  left: 0;
+  top: var(--space-sm);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--text-subtle);
+  pointer-events: none;
+  transition: all var(--transition-base);
+}
+
+.floating-input:focus~.floating-label,
+.floating-input:not(:placeholder-shown)~.floating-label {
+  top: -1rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary-dark);
 }
