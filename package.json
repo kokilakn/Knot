@@ -1,0 +1,25 @@
+{
+  "name": "knot",
+  "version": "0.1.0",
+  "description": "Knot – Find Yourself in Every Photo (Full-stack monorepo)",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "install:all": "bun install",
+    "dev": "sh -c \"cd frontend && bun run dev\" & sh -c \"cd backend && bun run dev\"",
+    "dev:frontend": "sh -c \"cd frontend && bun run dev\"",
+    "dev:backend": "sh -c \"cd backend && bun run dev\"",
+    "start": "echo 'Use: bun start:frontend or bun start:backend'",
+    "start:frontend": "sh -c \"cd frontend && bun run dev\"",
+    "start:backend": "sh -c \"cd backend && bun run start\"",
+    "build": "sh -c \"cd frontend && bun run build\"",
+    "lint": "sh -c \"cd frontend && bun run lint\""
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  }
+}

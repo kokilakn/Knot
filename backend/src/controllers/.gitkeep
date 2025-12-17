@@ -1,0 +1,13 @@
+/**
+ * Controllers Directory
+ *
+ * This directory contains request handlers that implement business logic.
+ * Controllers should be organized by feature (e.g., photoController.js, faceController.js).
+ *
+ * Example structure:
+ * - photoController.js - Photo upload, retrieval, deletion
+ * - faceController.js - Face detection, tagging, search
+ * - authController.js - Authentication and authorization
+ *
+ * Each controller should export functions that handle specific routes.
+ */

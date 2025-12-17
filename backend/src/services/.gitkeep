@@ -1,0 +1,26 @@
+/**
+ * Services Directory
+ *
+ * This directory contains business logic and external service integrations.
+ * Services are shared utilities used by controllers.
+ *
+ * Planned services:
+ * - faceRecognitionService.js - Integrate face detection/recognition API
+ *   (e.g., AWS Rekognition, OpenCV, TensorFlow)
+ * - photoService.js - Photo processing and storage
+ * - databaseService.js - Database queries and management
+ * - emailService.js - Email notifications
+ *
+ * Example usage:
+ * const { detectFaces } = require('./faceRecognitionService');
+ * const faces = await detectFaces(imageBuffer);
+ *
+ * Face Recognition Integration (FUTURE):
+ * - This directory is prepared for plugging in face detection models
+ * - Can support multiple providers:
+ *   * AWS Rekognition
+ *   * Google Cloud Vision
+ *   * Microsoft Face API
+ *   * OpenCV.js / TensorFlow.js
+ *   * Local models (TensorFlow, PyTorch)
+ */
