@@ -15,7 +15,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-lg) var(--space-lg) var(--space-md);
+    padding: var(--space-md);
     position: relative;
     z-index: 10;
 }
@@ -42,7 +42,7 @@
 }
 
 .iconBtn:hover {
-    background-color: color-mix(in srgb, var(--color-primary-dark), transparent 95%);
+    background-color: color-mix(in srgb, var(--color-ink), transparent 95%);
     color: var(--text-primary);
 }
 
@@ -61,7 +61,7 @@
     display: flex;
     flex-direction: column;
     padding: var(--space-xl) var(--space-2xl);
-    background: var(--color-paper);
+    background: var(--color-surface);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-sm);
     margin: 0 var(--space-lg) var(--space-xl);
@@ -96,7 +96,7 @@
 .contentContainer {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: 2rem;
     /* Spacing between QR and Code sections */
     flex: 1;
 }
@@ -180,6 +180,16 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+}
+
+.error {
+    padding: var(--space-sm) var(--space-md);
+    background: color-mix(in srgb, var(--color-error), transparent 92%);
+    border: 1px solid color-mix(in srgb, var(--color-error), transparent 70%);
+    border-radius: var(--radius-md);
+    color: var(--color-error);
+    font-size: 0.875rem;
+    text-align: center;
 }
 
 /* Input Styles - Matches Create Event */
@@ -271,14 +281,14 @@
     overflow: hidden;
     position: relative;
     background: var(--color-ink);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(246, 243, 239, 0.1);
+    box-shadow: 0 0 0 4px rgba(28, 28, 28, 0.5);
     aspect-ratio: 1;
 }
 
 .closeScannerBtn {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: rgba(246, 243, 239, 0.2);
+    color: var(--color-paper);
     border: none;
     padding: var(--space-md) var(--space-xl);
     border-radius: 50px;
@@ -293,11 +303,11 @@
 }
 
 .closeScannerBtn:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(246, 243, 239, 0.3);
 }
 
 .scannerTitle {
-    color: white;
+    color: var(--color-paper);
     font-family: var(--font-serif);
     font-size: 1.5rem;
     margin-bottom: var(--space-sm);

@@ -17,6 +17,10 @@ yarn-error.log*
 pnpm-debug.log*
 
 
+frontend/.env
+backend/.env
+frontend/public/
+backend/test-images/
 frontend/.env.local
 frontend/.env.development.local
 frontend/.env.test.local
@@ -24,7 +28,8 @@ frontend/.env.production.local
 backend/.env.local
 backend/.env.development.local
 backend/.env.test.local
-backend/.env.production.local   
+backend/.env.production.local 
+backend/models/  
 
 frontend/.next/
 frontend/out/

@@ -1,30 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import PaperBackground from '@/components/PaperBackground';
+import { useUser } from '@/lib/UserContext';
+import { Spinner } from '@/components/ui';
 import styles from './events.module.css';
 
 // Type definition for an event
 interface Event {
-    id: string;
+    eventId: string;
+    code: string;
     name: string;
-    date: string;
-    coverImage: string;
-    formattedDate: string;
+    eventDate: string;
+    coverPageUrl: string | null;
 }
-
-// Hardcoded single event as requested
-const EVENTS: Event[] = [
-    {
-        id: '1',
-        name: "Kok's Wedding",
-        date: '2023-10-14',
-        formattedDate: 'October 14, 2023',
-        // Using the same image from the existing event page details
-        coverImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDg69gGD12xuf6pNQeB5PRSlY4n_NW-UaY9LZxBqYNpyjbKd8txI7EMm5ncxRtvioIPIVAgBUFlPkmQ0AmkNhB2XLO42rVL1pbXpgf9kRKcBivS3hiNdH2XFgwlLngsQhyRYMQeHtR2LwhBGUArQYtBjJa0g4yWgOeA6uNXTsFbTUpy9iAUG15sXIMUcCetjFtlPwslOtT_t2weU4wmGmPnGXaUQC1wdaMY5qUWIu0w8StR0WRWtklwfpf8ZKWtA12QDXYn1RD34MK4'
-    }
-];
 
 function IconBack() {
     return (
@@ -35,6 +26,57 @@ function IconBack() {
 }
 
 export default function EventsPage() {
+    const router = useRouter();
+    const { user, loading: userLoading } = useUser();
+    const [events, setEvents] = useState<Event[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    // Redirect to login if not authenticated
+    useEffect(() => {
+        if (!userLoading && !user) {
+            router.push('/login');
+        }
+    }, [userLoading, user, router]);
+
+    useEffect(() => {
+        const fetchEvents = async () => {
+            if (!user) return;
+
+            try {
+                const res = await fetch('/api/events');
+                const data = await res.json();
+
+                if (res.ok) {
+                    setEvents(data.events || []);
+                } else if (res.status === 401) {
+                    router.push('/login');
+                } else {
+                    setError(data.error || 'Failed to load events');
+                }
+            } catch {
+                setError('Failed to load events');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (user) {
+            fetchEvents();
+        }
+    }, [user, router]);
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
+
+    const defaultCover = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDg69gGD12xuf6pNQeB5PRSlY4n_NW-UaY9LZxBqYNpyjbKd8txI7EMm5ncxRtvioIPIVAgBUFlPkmQ0AmkNhB2XLO42rVL1pbXpgf9kRKcBivS3hiNdH2XFgwlLngsQhyRYMQeHtR2LwhBGUArQYtBjJa0g4yWgOeA6uNXTsFbTUpy9iAUG15sXIMUcCetjFtlPwslOtT_t2weU4wmGmPnGXaUQC1wdaMY5qUWIu0w8StR0WRWtklwfpf8ZKWtA12QDXYn1RD34MK4';
+
     return (
         <PaperBackground>
             <div className={styles.container}>
@@ -53,16 +95,40 @@ export default function EventsPage() {
                 </section>
 
                 <main className={styles.grid}>
-                    {EVENTS.map((event) => (
-                        <Link href="/event" key={event.id} className={styles.card}>
+                    {loading && (
+                        <div style={{ textAlign: 'center', color: 'var(--text-subtle)', gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem' }}>
+                            <Spinner size="lg" color="accent" />
+                            <p>Loading events...</p>
+                        </div>
+                    )}
+
+                    {error && (
+                        <p style={{ textAlign: 'center', color: 'var(--color-error)', gridColumn: '1 / -1' }}>
+                            {error}
+                        </p>
+                    )}
+
+                    {!loading && !error && events.length === 0 && (
+                        <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '2rem' }}>
+                            <p style={{ color: 'var(--text-subtle)', marginBottom: '1rem' }}>
+                                No events yet
+                            </p>
+                            <Link href="/create-event" style={{ color: 'var(--color-primary-dark)' }}>
+                                Create your first event
+                            </Link>
+                        </div>
+                    )}
+
+                    {events.map((event) => (
+                        <Link href={`/event/${event.code}`} key={event.eventId} className={styles.card}>
                             <div
                                 className={styles.cardBackground}
-                                style={{ backgroundImage: `url('${event.coverImage}')` }}
+                                style={{ backgroundImage: `url('${event.coverPageUrl || defaultCover}')` }}
                                 aria-hidden="true"
                             />
                             <div className={styles.cardOverlay} />
                             <div className={styles.cardContent}>
-                                <span className={styles.eventDate}>{event.formattedDate}</span>
+                                <span className={styles.eventDate}>{formatDate(event.eventDate)}</span>
                                 <h2 className={styles.eventName}>{event.name}</h2>
                             </div>
                         </Link>
@@ -72,3 +138,4 @@ export default function EventsPage() {
         </PaperBackground>
     );
 }
+

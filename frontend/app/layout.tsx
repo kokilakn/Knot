@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { UserProvider } from '@/lib/UserContext';
 
 export const metadata: Metadata = {
   title: 'Knot – Find Yourself in Every Photo',
@@ -16,7 +17,10 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
       </head>
-      <body className="paper-texture" >{children}</body>
+      <body className="paper-texture">
+        <UserProvider>{children}</UserProvider>
+      </body>
     </html>
   );
 }
+

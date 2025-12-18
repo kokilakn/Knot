@@ -56,7 +56,7 @@ body::before {
    ========================================================================== */
 
 .paper-texture {
-  --paper-base-color: var(--color-border);
+  --paper-base-color: var(--color-paper);
   background-color: var(--paper-base-color);
   position: relative;
 }
@@ -112,7 +112,8 @@ button>*,
   z-index: 2;
 }
 
-Paper Texture Variants==========================================================================*/
+/* Paper Texture Variants
+   ========================================================================== */
 
 /* Accent colored paper texture */
 .paper-texture--accent {

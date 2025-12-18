@@ -35,7 +35,7 @@
 }
 
 .iconBtn:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: color-mix(in srgb, var(--color-ink), transparent 95%);
 }
 
 .content {
@@ -43,8 +43,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: var(--space-xl);
+    width: 100%;
 }
 
 .card {
@@ -93,7 +94,7 @@
     width: 100%;
     border-radius: var(--radius-md);
     overflow: hidden;
-    background: black;
+    background: var(--color-ink);
     aspect-ratio: 9/16;
     max-height: 60vh;
 }
@@ -114,15 +115,15 @@
     padding: var(--space-lg);
     display: flex;
     justify-content: center;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+    background: linear-gradient(to top, rgba(28, 28, 28, 0.5), transparent);
 }
 
 .captureBtn {
     width: 4.5rem;
     height: 4.5rem;
     border-radius: 50%;
-    background: white;
-    border: 4px solid rgba(255, 255, 255, 0.3);
+    background: var(--color-paper);
+    border: 4px solid rgba(246, 243, 239, 0.3);
     cursor: pointer;
     transition: transform var(--transition-fast);
 }
@@ -133,4 +134,73 @@
 
 .hiddenInput {
     display: none;
+}
+
+/* Results */
+.resultsContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.resultsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+    width: 100%;
+}
+
+.resultsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-lg);
+    width: 100%;
+}
+
+.resultCard {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    position: relative;
+    aspect-ratio: 1;
+}
+
+.userEntry {
+    border: 2px solid var(--color-accent);
+}
+
+.resultImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.matchScore {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-xs);
+    background: rgba(28, 28, 28, 0.6);
+    color: var(--color-paper);
+    font-size: 0.8rem;
+    text-align: center;
+    backdrop-filter: blur(4px);
+}
+
+.spinner {
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }

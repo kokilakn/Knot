@@ -16,10 +16,23 @@
     "start:frontend": "sh -c \"cd frontend && bun run dev\"",
     "start:backend": "sh -c \"cd backend && bun run start\"",
     "build": "sh -c \"cd frontend && bun run build\"",
-    "lint": "sh -c \"cd frontend && bun run lint\""
+    "lint": "sh -c \"cd frontend && bun run lint\"",
+    "db:push": "sh -c \"cd frontend && bun run db:push\"",
+    "db:generate": "sh -c \"cd frontend && bun run db:generate\"",
+    "db:migrate": "sh -c \"cd frontend && bun run db:migrate\"",
+    "db:studio": "sh -c \"cd frontend && bun run db:studio\""
   },
   "engines": {
     "node": ">=18.0.0",
     "bun": ">=1.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.45.1",
+    "pg": "^8.16.3",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.8"
   }
 }

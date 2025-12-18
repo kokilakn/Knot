@@ -1,14 +1,24 @@
-.centered {
+.pageWrapper {
   min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) 0;
+}
+
+.centered {
+  min-height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-2xl) var(--space-xl);
-  max-width: 420px;
+  padding: var(--space-xl) var(--space-2xl);
+  max-width: calc(800px - (2 * var(--space-lg)));
+  width: calc(100% - (2 * var(--space-lg)));
   margin: 0 auto;
   /* Use paper-texture utility for background */
-  background-color: var(--color-paper);
+  background-color: var(--color-surface);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
   position: relative;
@@ -19,8 +29,8 @@
 
 .header {
   text-align: center;
+  margin-top: 0;
   margin-bottom: var(--space-2xl);
-  margin-top: var(--space-xl);
 }
 
 .logo {
@@ -75,7 +85,7 @@
   display: flex;
   gap: var(--space-lg);
   justify-content: center;
-  margin-bottom: var(--space-xl);
+  margin-bottom: 0;
 }
 
 .footerLink {

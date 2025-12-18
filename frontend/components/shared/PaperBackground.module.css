@@ -1,7 +1,7 @@
 .paper {
   min-height: 100vh;
   width: 100vw;
-  background-color: #f9f7f2; /* Warm off-white */
+  background-color: var(--color-border);
   position: relative;
   overflow: hidden;
   font-family: var(--font-body, 'Montserrat', sans-serif);
@@ -19,7 +19,7 @@
   background-repeat: repeat;
 }
 
-.paper > * {
+.paper>* {
   position: relative;
   z-index: 1;
 }

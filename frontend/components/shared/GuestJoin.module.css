@@ -18,6 +18,6 @@
 .guest:hover,
 .guest:focus {
   background: var(--color-ink);
-  color: #fff;
+  color: var(--color-paper);
   border-color: var(--color-ink);
 }

@@ -20,6 +20,7 @@ import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import healthRoutes from './routes/health.js';
+import faceRoutes from './routes/face.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -40,8 +41,8 @@ app.use(
 );
 
 // Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Request logging middleware (simple)
 app.use((req, res, next) => {
@@ -55,6 +56,7 @@ app.use((req, res, next) => {
 
 // Health check routes
 app.use('/api', healthRoutes);
+app.use('/api/faces', faceRoutes);
 
 // TODO: Add additional route groups here
 // app.use('/api/photos', photoRoutes);

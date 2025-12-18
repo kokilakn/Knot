@@ -5,7 +5,9 @@ import { Button } from '@/components/ui';
 import styles from './join-event.module.css';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { useUser } from '@/lib/UserContext';
 
 // Icons
 function IconBack() {
@@ -46,14 +48,47 @@ function IconClose() {
     );
 }
 
+// Extract event code from QR scan result (handles URL or plain code)
+function extractEventCode(scannedText: string): string {
+    // If it's a URL, try to extract the event code from it
+    try {
+        const url = new URL(scannedText);
+        // Check for /event/CODE pattern
+        const pathMatch = url.pathname.match(/\/event\/([A-Z0-9]{10})/i);
+        if (pathMatch) {
+            return pathMatch[1].toUpperCase();
+        }
+        // Check for ?code=CODE parameter
+        const codeParam = url.searchParams.get('code');
+        if (codeParam) {
+            return codeParam.toUpperCase();
+        }
+    } catch {
+        // Not a URL, treat as plain code
+    }
+
+    // If it looks like a 10-character alphanumeric code, return it
+    const codeMatch = scannedText.match(/^[A-Z0-9]{10}$/i);
+    if (codeMatch) {
+        return scannedText.toUpperCase();
+    }
+
+    // Fallback: return as-is (will likely fail validation)
+    return scannedText.toUpperCase();
+}
+
 export default function JoinEventPage() {
+    const router = useRouter();
+    const { user } = useUser();
     const [eventCode, setEventCode] = useState('');
     const [isScanning, setIsScanning] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const scannerRef = useRef<Html5Qrcode | null>(null);
+    const autoSubmitRef = useRef(false);
 
     useEffect(() => {
         if (isScanning) {
-            // Give the DOM a moment to render the container
             const timeoutId = setTimeout(() => {
                 const html5QrCode = new Html5Qrcode("reader");
                 scannerRef.current = html5QrCode;
@@ -69,12 +104,14 @@ export default function JoinEventPage() {
                     { facingMode: "environment" },
                     config,
                     (decodedText) => {
-                        // Success callback
-                        setEventCode(decodedText);
+                        // Extract just the code from the scanned result
+                        const code = extractEventCode(decodedText);
+                        setEventCode(code);
+                        autoSubmitRef.current = true;
                         stopScanning();
                     },
-                    (errorMessage) => {
-                        // Error callback (ignore frequent read errors)
+                    () => {
+                        // Ignore frequent read errors
                     }
                 ).catch((err) => {
                     console.error("Error starting scanner", err);
@@ -91,6 +128,14 @@ export default function JoinEventPage() {
         }
     }, [isScanning]);
 
+    // Auto-submit when QR code is scanned
+    useEffect(() => {
+        if (autoSubmitRef.current && eventCode) {
+            autoSubmitRef.current = false;
+            handleJoin();
+        }
+    }, [eventCode]);
+
     const stopScanning = async () => {
         if (scannerRef.current && scannerRef.current.isScanning) {
             try {
@@ -103,10 +148,36 @@ export default function JoinEventPage() {
         setIsScanning(false);
     };
 
-    const handleJoin = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Join with code:', eventCode);
-        // Add navigation logic here when backend is ready
+    const handleJoin = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        setError('');
+
+        if (!eventCode.trim()) {
+            setError('Please enter an event code');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const res = await fetch('/api/events/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: eventCode.trim() }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                router.push(`/event/${data.event.code}`);
+            } else {
+                setError(data.error || 'Failed to join event');
+            }
+        } catch {
+            setError('An error occurred. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -129,9 +200,13 @@ export default function JoinEventPage() {
                 {/* Header */}
                 <header className={styles.header}>
                     <div className={styles.headerLeft}>
-                        <Link href="/dashboard" className={styles.iconBtn} aria-label="Back">
+                        <button
+                            onClick={() => user ? router.push('/dashboard') : router.push('/login')}
+                            className={styles.iconBtn}
+                            aria-label="Back"
+                        >
                             <IconBack />
-                        </Link>
+                        </button>
                         <span className={styles.headerTitle}>Knot</span>
                     </div>
                 </header>
@@ -165,6 +240,8 @@ export default function JoinEventPage() {
 
                         {/* Code Input Section */}
                         <form className={styles.form} onSubmit={handleJoin}>
+                            {error && <div className={styles.error}>{error}</div>}
+
                             <div className={`${styles.fieldGroup} animate-fade-in animate-delay-3`}>
                                 <input
                                     id="event-code"
@@ -172,16 +249,18 @@ export default function JoinEventPage() {
                                     className={styles.input}
                                     placeholder=" "
                                     value={eventCode}
-                                    onChange={(e) => setEventCode(e.target.value)}
+                                    onChange={(e) => setEventCode(e.target.value.toUpperCase())}
+                                    maxLength={10}
+                                    style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}
                                 />
-                                <label className={styles.label} htmlFor="event-code">Event Code</label>
+                                <label className={styles.label} htmlFor="event-code">Event Code (10 characters)</label>
                             </div>
 
                             {/* Submit Button */}
                             <div className={`${styles.footer} animate-fade-in animate-delay-4`}>
-                                <Button type="submit" variant="primary" color="logo" size="lg" fullWidth disabled={!eventCode}>
+                                <Button type="submit" variant="primary" color="logo" size="lg" fullWidth disabled={!eventCode || loading}>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        Join Event <IconArrowRight />
+                                        {loading ? 'Joining...' : 'Join Event'} {!loading && <IconArrowRight />}
                                     </span>
                                 </Button>
                             </div>
@@ -192,3 +271,4 @@ export default function JoinEventPage() {
         </PaperBackground>
     );
 }
+

@@ -120,9 +120,9 @@
     position: absolute;
     inset: 0;
     background: linear-gradient(to bottom,
-            rgba(0, 0, 0, 0) 0%,
-            rgba(0, 0, 0, 0.2) 50%,
-            rgba(0, 0, 0, 0.6) 100%);
+            rgba(28, 28, 28, 0) 0%,
+            rgba(28, 28, 28, 0.2) 50%,
+            rgba(28, 28, 28, 0.6) 100%);
     z-index: 1;
 }
 
@@ -141,20 +141,20 @@
 .eventDate {
     font-family: var(--font-body);
     font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.9);
+    color: color-mix(in srgb, var(--color-paper), transparent 10%);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 500;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 1px 2px rgba(28, 28, 28, 0.2);
 }
 
 .eventName {
     font-family: var(--font-serif);
     font-size: 2rem;
     font-weight: 500;
-    color: #ffffff;
+    color: var(--color-paper);
     line-height: 1.2;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 2px 4px rgba(28, 28, 28, 0.3);
 }
 
 /* Empty State */

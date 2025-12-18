@@ -2,8 +2,11 @@
 
 import PaperBackground from '@/components/PaperBackground';
 import styles from './profile.module.css';
+import { Spinner } from '@/components/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/lib/UserContext';
+import { useEffect } from 'react';
 
 function IconBack() {
     return (
@@ -38,13 +41,58 @@ function IconLogout() {
     );
 }
 
+// Generate a DiceBear avatar URL from email
+function generateAvatarUrl(email: string): string {
+    // Using DiceBear's "initials" style for a clean look
+    // Background: Accent (5F6F82), Text: Paper (F6F3EF)
+    const seed = encodeURIComponent(email);
+    return `https://api.dicebear.com/7.x/initials/svg?seed=${seed}&backgroundColor=5F6F82&textColor=F6F3EF`;
+}
+
 export default function ProfilePage() {
     const router = useRouter();
+    const { user, loading, logout } = useUser();
 
-    const handleLogout = () => {
-        // Implement logout logic here
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push('/login');
+        }
+    }, [loading, user, router]);
+
+    const handleLogout = async () => {
+        await logout();
         router.push('/login');
     };
+
+    // Show loading state
+    if (loading) {
+        return (
+            <PaperBackground>
+                <div className={styles.container}>
+                    <header className={styles.header}>
+                        <div className={styles.headerLeft}>
+                            <Link href="/dashboard" className={styles.iconBtn} aria-label="Back">
+                                <IconBack />
+                            </Link>
+                            <span className={styles.logo}>Knot</span>
+                        </div>
+                    </header>
+                    <main style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', flex: 1, gap: '1rem' }}>
+                        <Spinner size="lg" color="accent" />
+                        <p style={{ color: 'var(--text-subtle)' }}>Loading profile...</p>
+                    </main>
+                </div>
+            </PaperBackground>
+        );
+    }
+
+    // Handle not authenticated (will redirect)
+    if (!user) {
+        return null;
+    }
+
+    // Use Google avatar if available, otherwise generate DiceBear avatar
+    const avatarUrl = user.avatarUrl || generateAvatarUrl(user.email);
 
     return (
         <PaperBackground>
@@ -62,12 +110,12 @@ export default function ProfilePage() {
                     <section className={styles.profileHero}>
                         <div className={styles.avatarLarge}>
                             <img
-                                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=240&h=240&fit=crop&crop=face"
+                                src={avatarUrl}
                                 alt="User avatar"
                             />
                         </div>
-                        <h1 className={styles.userName}>Kokila Reddy</h1>
-                        <p className={styles.userEmail}>kokila.reddy@example.com</p>
+                        <h1 className={styles.userName}>{user.name}</h1>
+                        <p className={styles.userEmail}>{user.email}</p>
                     </section>
 
                     <div className={styles.section}>
@@ -99,3 +147,4 @@ export default function ProfilePage() {
         </PaperBackground>
     );
 }
+

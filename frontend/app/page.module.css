@@ -3,17 +3,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: transparent;
   padding: 20px;
 }
 
 .container {
   width: 100%;
   max-width: 600px;
-  background: white;
-  border-radius: 12px;
+  background: var(--color-paper);
+  border-radius: var(--radius-xl);
   padding: 40px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-default);
 }
 
 .header {
@@ -25,32 +26,32 @@
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 10px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .tagline {
   font-size: 1.2rem;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .description {
   margin-bottom: 40px;
   text-align: center;
-  color: #555;
+  color: var(--text-subtle);
   line-height: 1.6;
 }
 
 .healthCheck {
   margin-bottom: 40px;
   padding: 20px;
-  background: #f5f5f5;
-  border-radius: 8px;
+  background: var(--color-paper);
+  border-radius: var(--radius-md);
 }
 
 .healthCheck h2 {
   font-size: 1.1rem;
   margin-bottom: 15px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .button {
@@ -63,10 +64,10 @@
 .success {
   margin-top: 15px;
   padding: 15px;
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
-  border-radius: 6px;
-  color: #155724;
+  background-color: color-mix(in srgb, var(--color-success), transparent 90%);
+  border: 1px solid color-mix(in srgb, var(--color-success), transparent 70%);
+  border-radius: var(--radius-md);
+  color: var(--color-success);
 }
 
 .success p {
@@ -77,10 +78,10 @@
 .error {
   margin-top: 15px;
   padding: 15px;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 6px;
-  color: #721c24;
+  background-color: color-mix(in srgb, var(--color-error), transparent 90%);
+  border: 1px solid color-mix(in srgb, var(--color-error), transparent 70%);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
   font-size: 0.95rem;
 }
 
@@ -91,7 +92,7 @@
 .features h2 {
   font-size: 1.1rem;
   margin-bottom: 15px;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .features ul {
@@ -100,8 +101,8 @@
 
 .features li {
   padding: 8px 0;
-  color: #555;
-  border-bottom: 1px solid #eee;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .features li:last-child {

@@ -14,15 +14,21 @@
    /* -------------------------------------------------------------------------
      Core Color Tokens
      ------------------------------------------------------------------------- */
-   --color-paper: #F6F3EF;
+   --color-paper: #F7F5F2;
    --color-ink: #1C1C1C;
    --color-ink-muted: #4A4A4A;
    --color-ink-subtle: #7A7A7A;
-   --color-accent: #5F6F82;
-   --color-border: #E2DED8;
-   --color-surface: #FFFFFF;
-   --color-primary-dark: #37474f;
-   --color-logo: #3C4A57;
+   --color-accent: #334351;
+   --color-accent-active: #1A252F;
+   --color-border: #E4DED7;
+   --color-surface: var(--color-paper);
+   /* cards only */
+   --color-primary-dark: #334351;
+   --color-logo: #334351;
+   --color-error: #8C2F2F;
+   /* Deep red for paper */
+   --color-success: #3D5A45;
+   /* Forest green for paper */
 
    /* -------------------------------------------------------------------------
      Semantic Background Tokens
@@ -38,7 +44,7 @@
    --text-primary: var(--color-ink);
    --text-muted: var(--color-ink-muted);
    --text-subtle: var(--color-ink-subtle);
-   --text-on-accent: #FAFAFA;
+   --text-on-accent: var(--color-paper);
    --text-on-ink: var(--color-paper);
 
    /* -------------------------------------------------------------------------
@@ -85,5 +91,5 @@
    --shadow-sm: 0 1px 2px rgba(28, 28, 28, 0.04);
    --shadow-md: 0 2px 6px rgba(28, 28, 28, 0.06);
    --shadow-lg: 0 4px 12px rgba(28, 28, 28, 0.08);
-   --shadow-floating-nav: 0 8px 30px rgba(0, 0, 0, 0.06);
+   --shadow-floating-nav: 0 8px 30px rgba(28, 28, 28, 0.06);
 }

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui';
 import styles from './create-event.module.css';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // Icons
 function IconBack() {
@@ -62,9 +63,15 @@ function IconArrowRight() {
 }
 
 export default function CreateEventPage() {
+    const router = useRouter();
+    const [title, setTitle] = useState('');
     const [photo, setPhoto] = useState<string | null>(null);
+    const [file, setFile] = useState<File | null>(null);
     const [dateValue, setDateValue] = useState('');
     const [isDateFocused, setIsDateFocused] = useState(false);
+    const [notes, setNotes] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleAddPhotoClick = () => {
@@ -77,6 +84,7 @@ export default function CreateEventPage() {
         if (files && files[0]) {
             const newPhotoUrl = URL.createObjectURL(files[0]);
             setPhoto(newPhotoUrl);
+            setFile(files[0]);
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
@@ -84,6 +92,7 @@ export default function CreateEventPage() {
     const handleRemovePhoto = () => {
         if (photo) URL.revokeObjectURL(photo);
         setPhoto(null);
+        setFile(null);
     };
 
     const openDatePicker = () => {
@@ -97,6 +106,51 @@ export default function CreateEventPage() {
             }
         } catch (error) {
             input.focus();
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        if (!title.trim()) {
+            setError('Please enter a title');
+            setLoading(false);
+            return;
+        }
+
+        if (!dateValue) {
+            setError('Please select a date');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('name', title.trim());
+            formData.append('eventDate', dateValue);
+            formData.append('notes', notes.trim());
+            if (file) {
+                formData.append('coverPhoto', file);
+            }
+
+            const res = await fetch('/api/events', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                router.push(`/event/${data.event.code}`);
+            } else {
+                setError(data.error || 'Failed to create event');
+            }
+        } catch {
+            setError('An error occurred. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -123,7 +177,8 @@ export default function CreateEventPage() {
                         <p className={styles.pageSubtitle}>Start a new chapter in your story.</p>
                     </div>
 
-                    <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
+                    <form className={styles.form} onSubmit={handleSubmit}>
+                        {error && <div className={styles.error}>{error}</div>}
 
                         {/* Title Input - Floating Label */}
                         <div className={`${styles.fieldGroup} animate-fade-in animate-delay-1`}>
@@ -132,6 +187,8 @@ export default function CreateEventPage() {
                                 type="text"
                                 className={styles.input}
                                 placeholder=" "
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
                             />
                             <label className={styles.label} htmlFor="event-name">Title</label>
                         </div>
@@ -148,6 +205,7 @@ export default function CreateEventPage() {
                                     type="date"
                                     className={styles.inputDate}
                                     style={{ color: (dateValue || isDateFocused) ? 'var(--text-primary)' : 'transparent' }}
+                                    value={dateValue}
                                     onChange={(e) => setDateValue(e.target.value)}
                                     onFocus={() => setIsDateFocused(true)}
                                     onBlur={() => setIsDateFocused(false)}
@@ -167,6 +225,8 @@ export default function CreateEventPage() {
                                 className={styles.textarea}
                                 placeholder=" "
                                 rows={4}
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
                             ></textarea>
                             <label className={styles.label} htmlFor="event-desc">Notes <span style={{ textTransform: 'none', fontStyle: 'italic', opacity: 0.7 }}>(Optional)</span></label>
                         </div>
@@ -212,9 +272,9 @@ export default function CreateEventPage() {
 
                         {/* Submit Button */}
                         <div className={`${styles.footer} animate-fade-in animate-delay-4`}>
-                            <Button type="submit" variant="primary" color="logo" size="lg" fullWidth>
+                            <Button type="submit" variant="primary" color="logo" size="lg" fullWidth disabled={loading}>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    Create Event <IconArrowRight />
+                                    {loading ? 'Creating...' : 'Create Event'} {!loading && <IconArrowRight />}
                                 </span>
                             </Button>
                         </div>
@@ -225,3 +285,4 @@ export default function CreateEventPage() {
         </PaperBackground>
     );
 }
+

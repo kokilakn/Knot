@@ -35,7 +35,7 @@
 
     /* Appearance */
     border: 1px solid transparent;
-    border-radius: 2px;
+    border-radius: var(--radius-md);
     cursor: pointer;
     user-select: none;
     position: relative;
@@ -93,7 +93,7 @@
     background-color: var(--btn-color);
     color: var(--btn-text-color);
     border-color: var(--btn-color);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(28, 28, 28, 0.08);
     opacity: 0.9;
 }
 
@@ -117,11 +117,13 @@
 
 .btn--primary:hover {
     opacity: 1;
-    background-color: #000;
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
 }
 
 .btn--primary:active {
-    filter: brightness(0.88);
+    background-color: var(--color-accent-active);
+    border-color: var(--color-accent-active);
 }
 
 .btn--primary:disabled {
@@ -176,9 +178,9 @@
 }
 
 .btn--secondary:active {
-    background-color: var(--btn-color);
+    background-color: var(--color-accent-active);
     color: var(--btn-text-color);
-    filter: brightness(0.92);
+    border-color: var(--color-accent-active);
 }
 
 .btn--secondary:disabled {
