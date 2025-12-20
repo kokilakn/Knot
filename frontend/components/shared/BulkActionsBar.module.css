@@ -1,0 +1,87 @@
+.container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-paper);
+    padding: 12px 20px;
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    animation: slideUp 0.3s ease-out;
+    border: 1px solid var(--color-border);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 100px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+.info {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.download {
+    background: var(--color-accent);
+    color: var(--color-paper);
+}
+
+.download:hover {
+    filter: brightness(1.1);
+}
+
+.delete {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.delete:hover {
+    background: #fecaca;
+}
+
+@media (max-width: 600px) {
+    .container {
+        width: calc(100% - 32px);
+        bottom: 16px;
+        padding: 10px 16px;
+        gap: 12px;
+    }
+
+    .btn span {
+        display: none;
+    }
+
+    .btn {
+        padding: 8px 12px;
+    }
+}

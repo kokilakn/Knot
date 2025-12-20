@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import PaperBackground from '@/components/PaperBackground';
 import { useUser } from '@/lib/UserContext';
 import { Spinner } from '@/components/ui';
+import { getPhotoUrl } from '@/hooks/usePhotoUrl';
 import styles from './events.module.css';
 
 // Type definition for an event
@@ -23,6 +24,10 @@ function IconBack() {
             <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg>
     );
+}
+
+function IconAdd() {
+    return <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>add</span>;
 }
 
 export default function EventsPage() {
@@ -87,6 +92,10 @@ export default function EventsPage() {
                         </Link>
                         <span className={styles.logo}>Knot</span>
                     </div>
+                    <Link href="/create-event" className={styles.createBtn}>
+                        <IconAdd />
+                        <span>Create Event</span>
+                    </Link>
                 </header>
 
                 <section className={styles.titleSection}>
@@ -123,7 +132,7 @@ export default function EventsPage() {
                         <Link href={`/event/${event.code}`} key={event.eventId} className={styles.card}>
                             <div
                                 className={styles.cardBackground}
-                                style={{ backgroundImage: `url('${event.coverPageUrl || defaultCover}')` }}
+                                style={{ backgroundImage: `url('${getPhotoUrl(event.coverPageUrl || defaultCover)}')` }}
                                 aria-hidden="true"
                             />
                             <div className={styles.cardOverlay} />

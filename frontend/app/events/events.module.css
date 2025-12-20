@@ -55,6 +55,29 @@
     color: var(--color-primary-dark);
 }
 
+/* Create Event Button */
+.createBtn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: var(--color-primary-dark);
+    color: var(--color-paper);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-xl);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.createBtn:hover {
+    background: var(--color-accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
 /* Page Title */
 .titleSection {
     padding: 0 var(--space-2xl) var(--space-xl);

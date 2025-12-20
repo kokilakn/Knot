@@ -1,518 +1,321 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styles from './find-face.module.css';
 import PaperBackground from '@/components/PaperBackground';
-import Link from 'next/link';
-import { Button, Spinner } from '@/components/ui';
+import PhotoModal from '@/components/shared/PhotoModal';
 import { useParams } from 'next/navigation';
-import { compressImage } from '@/lib/imageUtils';
-import { MATCH_TIERS } from '@/lib/constants';
-import PhotoModal, { PhotoDetail } from '@/components/shared/PhotoModal';
+import { Spinner } from '@/components/ui';
+import { useUser } from '@/lib/UserContext';
 import { getPhotoUrl } from '@/hooks/usePhotoUrl';
 import { downloadPhotos } from '@/lib/downloadUtils';
-import { useUser } from '@/lib/UserContext';
+import { canDeletePhoto, deletePhotos } from '@/lib/photoActions';
+import { useCamera } from '@/hooks/useCamera';
+import { useSelection } from '@/hooks/useSelection';
+import { fetchEvent } from '@/lib/eventActions';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { captureVideoFrame, blobToBase64 } from '@/lib/imageUtils';
+import { MatchTier } from './components/MatchTier';
+import { BulkActionsBar } from '@/components/shared/BulkActionsBar';
+import { IconClose } from '@/components/shared/Icons';
+import { FaceIntro } from './components/FaceIntro';
+
+interface StatusModalProps {
+    type: 'error' | 'no-matches' | 'searching';
+    onClose: () => void;
+    onRetry?: () => void;
+}
+
+const StatusModal = ({ type, onClose, onRetry }: StatusModalProps) => (
+    <div className={styles.modalOverlay} onClick={onClose}>
+        <div className={`${styles.modalContent} paper-texture`} onClick={e => e.stopPropagation()}>
+            <button className={styles.modalClose} onClick={onClose}><IconClose /></button>
+            {type === 'searching' && (
+                <div className={styles.modalBody}>
+                    <Spinner size="lg" color="accent" />
+                    <h2>Finding your photos</h2>
+                    <p>We're scanning the event for matches...</p>
+                </div>
+            )}
+            {type === 'no-matches' && (
+                <div className={styles.modalBody}>
+                    <span className={`material-symbols-outlined ${styles.modalIcon}`}>person_off</span>
+                    <h2>No matches found</h2>
+                    <p>We couldn't find any photos of you in this event yet. Photos might still be uploading!</p>
+                    <button className={styles.modalBtn} onClick={onRetry || onClose}>Try Another Photo</button>
+                </div>
+            )}
+            {type === 'error' && (
+                <div className={styles.modalBody}>
+                    <span className={`material-symbols-outlined ${styles.modalIcon} ${styles.error}`}>error</span>
+                    <h2>Search failed</h2>
+                    <p>Ensure your face is clearly visible and try again.</p>
+                    <button className={styles.modalBtn} onClick={onRetry || onClose}>Try Again</button>
+                </div>
+            )}
+        </div>
+    </div>
+);
 
 interface Match {
     id: string;
     link: string;
     distance: number;
-    uploaderId?: string;
-    eventCreatorId?: string;
+    uploaderId?: string | null;
+    eventCreatorId?: string | null;
 }
 
 interface TieredMatches {
-    best: Match[];
+    excellent: Match[];
     good: Match[];
-    other: Match[];
-}
-
-function categorizeMatches(matches: Match[]): TieredMatches {
-    const best: Match[] = [];
-    const good: Match[] = [];
-    const other: Match[] = [];
-
-    for (const match of matches) {
-        if (match.distance <= MATCH_TIERS.BEST.maxDistance) {
-            best.push(match);
-        } else if (match.distance <= MATCH_TIERS.GOOD.maxDistance) {
-            good.push(match);
-        } else if (match.distance <= MATCH_TIERS.OTHER.maxDistance) {
-            other.push(match);
-        }
-    }
-
-    return { best, good, other };
+    possible: Match[];
 }
 
 export default function FindFacePage() {
-    const params = useParams();
-    const eventId = params.eventId as string;
-    const [eventName, setEventName] = useState('Event');
-    const [mode, setMode] = useState<'intro' | 'camera' | 'searching' | 'results'>('intro');
-    const [tieredMatches, setTieredMatches] = useState<TieredMatches>({ best: [], good: [], other: [] });
-    const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
-    const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
-    const [selectedPhoto, setSelectedPhoto] = useState<PhotoDetail | null>(null);
-
-    const [isSelectMode, setIsSelectMode] = useState(false);
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-    const [eventCreatorId, setEventCreatorId] = useState<string | null>(null);
+    const { eventId } = useParams() as { eventId: string };
     const { user } = useUser();
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragType, setDragType] = useState<'select' | 'unselect'>('select');
-    const dragProcessedRef = useRef<Set<string>>(new Set());
+    const [mode, setMode] = useState<'intro' | 'camera' | 'results'>('intro');
+    const [eventName, setEventName] = useState('Event');
+    const [eventCreatorId, setEventCreatorId] = useState<string | null>(null);
+    const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(null);
+    const [tieredMatches, setTieredMatches] = useState<TieredMatches>({ excellent: [], good: [], possible: [] });
+    const [allPhotos, setAllPhotos] = useState<Match[]>([]);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [selectedPhoto, setSelectedPhoto] = useState<Match | null>(null);
+    const [searchStatus, setSearchStatus] = useState<'none' | 'searching' | 'no-matches' | 'error'>('none');
 
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // Check for multiple cameras
-    useEffect(() => {
-        async function checkCameras() {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(d => d.kind === 'videoinput');
-                setHasMultipleCameras(videoDevices.length > 1);
-            } catch {
-                setHasMultipleCameras(false);
-            }
-        }
-        checkCameras();
-    }, []);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const { videoRef, startCamera, stopCamera } = useCamera('user');
+    const {
+        isSelectMode, setIsSelectMode, selectedIds, setSelectedIds, resetSelection,
+        handlePointerDown, handlePointerEnter
+    } = useSelection();
 
     useEffect(() => {
         if (eventId) {
-            fetch(`/api/events/${eventId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.event) setEventName(data.event.name);
-                })
-                .catch(console.error);
+            // Fetch both event details and photos to be sure about creator ID
+            fetchEvent(eventId).then(data => {
+                setEventName(data.event.name);
+                setCoverPhotoUrl(data.event.coverPageUrl || null);
+                const creatorId = data.event.userId || data.event.user_id;
+                if (creatorId) setEventCreatorId(creatorId.toLowerCase());
+            }).catch(console.error);
         }
     }, [eventId]);
 
-    const startCamera = useCallback(async (mode: 'user' | 'environment' = facingMode) => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: mode }
-            });
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-            }
-        } catch (err) {
-            console.error("Error accessing camera:", err);
-            alert("Could not access camera. Please allow permissions.");
-            setMode('intro');
-        }
-    }, [facingMode]);
-
-    const stopCamera = useCallback(() => {
-        if (videoRef.current && videoRef.current.srcObject) {
-            const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-            tracks.forEach(track => track.stop());
-            videoRef.current.srcObject = null;
-        }
+    useEffect(() => {
+        const handleScroll = () => setIsScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const handleCameraMode = () => {
-        setMode('camera');
-        setTimeout(() => startCamera(), 100);
-    };
+    const performSearch = async (imageSource: string | Blob) => {
+        setSearchStatus('searching');
+        setMode('results');
+        try {
+            let blob: Blob;
+            if (typeof imageSource === 'string') {
+                const res = await fetch(imageSource);
+                blob = await res.blob();
+            } else {
+                blob = imageSource;
+            }
 
-    const handleFlipCamera = async () => {
-        stopCamera();
-        const newMode = facingMode === 'user' ? 'environment' : 'user';
-        setFacingMode(newMode);
-        await startCamera(newMode);
-    };
+            const base64Image = await blobToBase64(blob);
 
-    const handleBack = () => {
-        if (mode === 'camera') {
-            stopCamera();
-            setMode('intro');
-        } else if (mode === 'searching' || mode === 'results') {
-            setMode('intro');
+            const res = await fetch(`/api/faces/match`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image: base64Image,
+                    eventId: eventId
+                })
+            });
+
+            if (!res.ok) {
+                setSearchStatus('error');
+                return;
+            }
+            const data = await res.json();
+            const matches: Match[] = data.matches || [];
+            setAllPhotos(matches);
+
+            if (matches.length === 0) {
+                setSearchStatus('no-matches');
+            } else {
+                setSearchStatus('none');
+                // Update eventCreatorId if missing from state but present in matches
+                if (!eventCreatorId && matches[0].eventCreatorId) {
+                    setEventCreatorId(matches[0].eventCreatorId);
+                }
+            }
+
+            setTieredMatches({
+                excellent: matches.filter(m => m.distance < 0.4),
+                good: matches.filter(m => m.distance >= 0.4 && m.distance < 0.5),
+                possible: matches.filter(m => m.distance >= 0.5 && m.distance < 0.6),
+            });
+        } catch (err) {
+            console.error(err);
+            setSearchStatus('error');
         }
     };
 
-    const handleCapture = async () => {
+    const capturePhoto = async () => {
         if (!videoRef.current) return;
-        const canvas = document.createElement('canvas');
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.drawImage(videoRef.current, 0, 0);
-            const fullQuality = canvas.toDataURL('image/jpeg', 0.95);
-            stopCamera();
-            setMode('searching');
-            const compressed = await compressImage(fullQuality);
-            performSearch(compressed);
-        }
+        const blob = await captureVideoFrame(videoRef.current);
+        if (blob) performSearch(blob);
+        stopCamera();
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const fullQuality = event.target?.result as string;
-                setMode('searching');
-                const compressed = await compressImage(fullQuality);
-                performSearch(compressed);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const performSearch = async (imageData: string) => {
-        try {
-            const res = await fetch('/api/faces/match', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: imageData, eventId: eventId })
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                console.log(`[FindFace] Received ${data.matches?.length} matches from server`);
-                const categorized = categorizeMatches(data.matches || []);
-                setTieredMatches(categorized);
-                if (data.matches && data.matches.length > 0) {
-                    setEventCreatorId(data.matches[0].eventCreatorId || null);
-                }
-                setMode('results');
-            } else {
-                const err = await res.json();
-                alert(err.error || "Search failed");
-                setMode('intro');
-            }
-        } catch (error) {
-            console.error("Search error:", error);
-            alert("Could not connect to face recognition service.");
-            setMode('intro');
-        }
-    };
-
-    useEffect(() => {
-        return () => stopCamera();
-    }, [stopCamera]);
-
-    const toggleSelect = (id: string, forceState?: boolean) => {
-        setSelectedIds(prev => {
-            const next = new Set(prev);
-            const currentState = next.has(id);
-            const newState = forceState !== undefined ? forceState : !currentState;
-
-            if (newState) next.add(id);
-            else next.delete(id);
-            return next;
-        });
-    };
-
-    const handlePointerDown = (id: string, currentlySelected: boolean) => {
-        if (!isSelectMode) return;
-        setIsDragging(true);
-        const nextState = !currentlySelected;
-        setDragType(nextState ? 'select' : 'unselect');
-        dragProcessedRef.current = new Set([id]);
-        toggleSelect(id, nextState);
-    };
-
-    const handlePointerEnter = (id: string) => {
-        if (!isDragging || dragProcessedRef.current.has(id)) return;
-        dragProcessedRef.current.add(id);
-        toggleSelect(id, dragType === 'select');
-    };
-
-    useEffect(() => {
-        const handleGlobalPointerUp = () => {
-            setIsDragging(false);
-            dragProcessedRef.current.clear();
-        };
-        window.addEventListener('pointerup', handleGlobalPointerUp);
-        return () => window.removeEventListener('pointerup', handleGlobalPointerUp);
-    }, []);
-
-    const handleToggleTier = (matches: Match[]) => {
-        const allSelected = matches.every(m => selectedIds.has(m.id));
-        setSelectedIds(prev => {
-            const next = new Set(prev);
-            if (allSelected) {
-                matches.forEach(m => next.delete(m.id));
-            } else {
-                matches.forEach(m => next.add(m.id));
-            }
-            return next;
-        });
+        const file = e.target.files?.[0];
+        if (file) performSearch(file);
     };
 
     const handleBulkDownload = async () => {
-        if (selectedIds.size === 0) return;
-        const selectedPhotos = allMatches.filter(p => selectedIds.has(p.id));
-        const photoUrls = selectedPhotos.map(p => getPhotoUrl(p.link));
-        const filename = `${eventName.replace(/\s+/g, '-').toLowerCase()}-knot-photos.zip`;
-        await downloadPhotos(photoUrls, filename);
+        const urls = allPhotos.filter(p => selectedIds.has(p.id)).map(p => getPhotoUrl(p.link));
+        await downloadPhotos(urls, `${eventName.replace(/\s+/g, '-').toLowerCase()}-matches.zip`);
     };
 
     const handleBulkDelete = async () => {
-        if (selectedIds.size === 0) return;
-        const confirmMsg = `Are you sure you want to delete ${selectedIds.size} photos?`;
-        if (!confirm(confirmMsg)) return;
-
+        if (!selectedIds.size || !confirm(`Delete ${selectedIds.size} photos?`)) return;
         try {
-            const res = await fetch(`/api/events/${eventId}/photos`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ photoIds: Array.from(selectedIds) }),
+            await deletePhotos(eventId, Array.from(selectedIds));
+            const remaining = allPhotos.filter(p => !selectedIds.has(p.id));
+            setAllPhotos(remaining);
+            setTieredMatches({
+                excellent: remaining.filter(m => m.distance < 0.4),
+                good: remaining.filter(m => m.distance >= 0.4 && m.distance < 0.5),
+                possible: remaining.filter(m => m.distance >= 0.5 && m.distance < 0.6),
             });
-
-            if (!res.ok) throw new Error('Bulk delete failed');
-
-            // Remove from results UI
-            const removeByIds = (matches: Match[]) => matches.filter(m => !selectedIds.has(m.id));
-            setTieredMatches(prev => ({
-                best: removeByIds(prev.best),
-                good: removeByIds(prev.good),
-                other: removeByIds(prev.other),
-            }));
-
-            setSelectedIds(new Set());
+            resetSelection();
             setIsSelectMode(false);
-        } catch (error) {
-            console.error(error);
-            alert('Failed to delete some photos.');
+        } catch {
+            alert('Failed to delete photos');
         }
     };
 
-    const canDeletePhoto = (photo: PhotoDetail | Match): boolean => {
-        if (!user) return false;
-        // If it's a Match object, it might have uploaderId/eventCreatorId
-        const uId = (photo as Match).uploaderId || (photo as PhotoDetail).uploaderId;
-        const eCreatorId = (photo as Match).eventCreatorId || eventCreatorId;
+    const checkCanDelete = useCallback((photo: Match) => {
+        return canDeletePhoto(photo, user?.id, eventCreatorId);
+    }, [eventCreatorId, user]);
 
-        if (eCreatorId === user.id) return true;
-        if (uId === user.id) return true;
-        return false;
-    };
+    const canDeleteSelected = useMemo(() => {
+        if (!user?.id || selectedIds.size === 0) return false;
 
-    const canDeleteSelected = () => {
-        if (selectedIds.size === 0) return false;
-        const selectedPhotos = allMatches.filter(p => selectedIds.has(p.id));
-        return selectedPhotos.every(p => canDeletePhoto(p));
-    };
+        const selectedPhotos = allPhotos.filter(p => selectedIds.has(p.id));
+        if (selectedPhotos.length === 0) return false;
 
-    // Flatten all matches for modal navigation
-    const allMatches: (PhotoDetail & { uploaderId?: string, eventCreatorId?: string })[] = [
-        ...tieredMatches.best,
-        ...tieredMatches.good,
-        ...tieredMatches.other,
-    ].map(m => ({
-        id: m.id,
-        link: m.link,
-        uploaderId: m.uploaderId,
-        eventCreatorId: m.eventCreatorId
-    }));
+        return selectedPhotos.every(checkCanDelete);
+    }, [allPhotos, selectedIds, checkCanDelete, user?.id]);
 
-    const totalMatches = allMatches.length;
+    const handleToggleAll = useCallback((ids: string[], select: boolean) => {
+        setSelectedIds((prev: Set<string>) => {
+            const next = new Set(prev);
+            ids.forEach(id => {
+                if (select) next.add(id);
+                else next.delete(id);
+            });
+            return next;
+        });
+    }, [setSelectedIds]);
 
-    const renderMatchSection = (title: string, matches: Match[]) => {
-        if (matches.length === 0) return null;
-        const allTierSelected = matches.every(m => selectedIds.has(m.id));
-
-        return (
-            <div className={styles.tierSection}>
-                <div className={styles.tierTitle}>
-                    <h3>{title}</h3>
-                    {isSelectMode && (
-                        <div className={styles.tierActions}>
-                            <button
-                                className={styles.textBtn}
-                                onClick={() => handleToggleTier(matches)}
-                            >
-                                {allTierSelected ? 'Unselect All' : 'Select All'}
-                            </button>
-                        </div>
-                    )}
-                </div>
-                <div className={styles.resultsGrid}>
-                    {matches.map((match) => {
-                        const isSelected = selectedIds.has(match.id);
-                        return (
-                            <div
-                                key={match.id}
-                                className={`${styles.resultCard} ${isSelected ? styles.selected : ''} ${isSelectMode ? styles.selecting : ''}`}
-                                onClick={() => {
-                                    if (!isSelectMode) {
-                                        setSelectedPhoto({ id: match.id, link: match.link });
-                                    }
-                                }}
-                                onPointerDown={() => {
-                                    if (isSelectMode) {
-                                        handlePointerDown(match.id, isSelected);
-                                    }
-                                }}
-                                onPointerEnter={() => handlePointerEnter(match.id)}
-                            >
-                                {isSelectMode && <div className={styles.selectionOverlay} />}
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={getPhotoUrl(match.link)} alt="Match" className={styles.resultImg} loading="lazy" />
-                                {isSelected && (
-                                    <div className={styles.checkBadge}>
-                                        <span className="material-symbols-outlined">check_circle</span>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    };
+    const headerActions = (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {mode === 'results' && searchStatus === 'none' && allPhotos.length > 0 && (
+                <button
+                    className={`${styles.selectBtn} ${isSelectMode ? styles.active : ''}`}
+                    onClick={() => { setIsSelectMode(!isSelectMode); if (isSelectMode) resetSelection(); }}
+                >
+                    {isSelectMode ? 'Cancel' : 'Select'}
+                </button>
+            )}
+        </div>
+    );
 
     return (
-        <PaperBackground>
+        <PaperBackground coverPhotoUrl={coverPhotoUrl}>
             <div className={styles.container}>
-                <header className={styles.header}>
-                    {mode === 'intro' ? (
-                        <Link href={`/event/${eventId}`} className={styles.iconBtn} aria-label="Back to Event">
-                            <span className="material-symbols-outlined">arrow_back</span>
-                        </Link>
-                    ) : (
-                        <button onClick={handleBack} className={styles.iconBtn} aria-label="Back">
-                            <span className="material-symbols-outlined">arrow_back</span>
-                        </button>
-                    )}
-                    <h1 className={styles.title}>
-                        {isSelectMode ? 'Select Photos' : `${eventName} – Find My Photos`}
-                    </h1>
-                    {mode === 'results' && totalMatches > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <button
-                                className={`${styles.selectBtn} ${isSelectMode ? styles.active : ''}`}
-                                onClick={() => {
-                                    setIsSelectMode(!isSelectMode);
-                                    if (isSelectMode) setSelectedIds(new Set());
-                                }}
-                            >
-                                {isSelectMode ? 'Cancel' : 'Select'}
-                            </button>
-                            {isSelectMode && (
-                                <span className={styles.countBadge}>{selectedIds.size}</span>
-                            )}
-                        </div>
-                    )}
-                </header>
+                <PageHeader
+                    title={isSelectMode ? 'Select Photos' : (mode === 'results' ? 'My Photos' : 'Find My Photos')}
+                    backHref={mode === 'intro' ? `/event/${eventId}` : undefined}
+                    onBack={mode !== 'intro' ? () => { stopCamera(); setMode('intro'); setAllPhotos([]); setSearchStatus('none'); } : undefined}
+                    actions={headerActions}
+                    scrolled={isScrolled}
+                    className={styles.header}
+                />
 
-                <div className={styles.content}>
-                    {mode === 'intro' && (
-                        <div className={styles.card}>
-                            <div className={styles.illustration}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 'inherit' }}>face_retouching_natural</span>
-                            </div>
-                            <h2>Discover Your Moments</h2>
-                            <p className={styles.instruction}>
-                                We use facial recognition to find photos of you in the gallery.
-                            </p>
-                            <div className={styles.buttonGroup}>
-                                <Button fullWidth onClick={handleCameraMode} size="lg">
-                                    Take a Selfie
-                                </Button>
-                                <Button fullWidth variant="secondary" onClick={() => fileInputRef.current?.click()}>
-                                    Upload Photo
-                                </Button>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    ref={fileInputRef}
-                                    className={styles.hiddenInput}
-                                    onChange={handleFileUpload}
-                                />
-                            </div>
+                <main className={styles.content}>
+                    {mode === 'results' && allPhotos.length > 0 && (
+                        <div className={styles.resultsContext}>
+                            <p>We found <strong>{allPhotos.length}</strong> photo{allPhotos.length === 1 ? '' : 's'} of you in {eventName}.</p>
+                            <button className={styles.newSearchBtn} onClick={() => setMode('intro')}>
+                                <span className="material-symbols-outlined">refresh</span>
+                                Search Again
+                            </button>
                         </div>
+                    )}
+                    {mode === 'intro' && (
+                        <FaceIntro
+                            onUploadClick={() => fileInputRef.current?.click()}
+                            onCameraClick={() => { setMode('camera'); setTimeout(() => startCamera().catch(() => setMode('intro')), 100); }}
+                        />
                     )}
 
                     {mode === 'camera' && (
                         <div className={styles.cameraContainer}>
-                            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                            <video ref={videoRef} autoPlay playsInline className={styles.video} muted />
-                            <div className={styles.overlay}>
-                                {hasMultipleCameras && (
-                                    <button className={styles.flipBtn} onClick={handleFlipCamera} aria-label="Flip Camera">
-                                        <span className="material-symbols-outlined">flip_camera_ios</span>
-                                    </button>
-                                )}
-                                <button className={styles.captureBtn} onClick={handleCapture} aria-label="Capture" />
-                            </div>
+                            <video ref={videoRef} autoPlay playsInline muted className={styles.video} />
+                            <div className={styles.overlay}><button className={styles.captureBtn} onClick={capturePhoto} /></div>
                         </div>
                     )}
 
-                    {mode === 'searching' && (
-                        <div className={styles.card}>
-                            <div className={styles.illustration}>
-                                <Spinner size="lg" color="accent" />
-                            </div>
-                            <h2>Scanning Gallery...</h2>
-                            <p>This looks for matches with your face.</p>
-                        </div>
-                    )}
-
-                    {mode === 'results' && (
+                    {mode === 'results' && allPhotos.length > 0 && (
                         <div className={styles.resultsContainer}>
-                            {totalMatches > 0 ? (
-                                <>
-                                    <div className={styles.resultsHeader}>
-                                        <h2>Your Photos {!isSelectMode && `(${totalMatches})`}</h2>
-                                        <Button variant="secondary" size="sm" onClick={() => setMode('intro')}>New Search</Button>
-                                    </div>
-                                    {renderMatchSection(MATCH_TIERS.BEST.label, tieredMatches.best)}
-                                    {renderMatchSection(MATCH_TIERS.GOOD.label, tieredMatches.good)}
-                                    {renderMatchSection(MATCH_TIERS.OTHER.label, tieredMatches.other)}
-                                </>
-                            ) : (
-                                <div className={styles.card}>
-                                    <div className={styles.illustration}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: 'inherit' }}>person_search</span>
-                                    </div>
-                                    <h2>No Matches Found</h2>
-                                    <p>We couldn&apos;t find any photos of you in this event.</p>
-                                    <Button onClick={() => setMode('intro')} style={{ marginTop: '1rem' }}>Try Again</Button>
-                                </div>
-                            )}
+                            <MatchTier title="Excellent Matches" matches={tieredMatches.excellent} selectedIds={selectedIds} isSelectMode={isSelectMode} onPhotoClick={setSelectedPhoto} onPointerDown={handlePointerDown} onPointerEnter={handlePointerEnter} onToggleAll={handleToggleAll} />
+                            <MatchTier title="Good Matches" matches={tieredMatches.good} selectedIds={selectedIds} isSelectMode={isSelectMode} onPhotoClick={setSelectedPhoto} onPointerDown={handlePointerDown} onPointerEnter={handlePointerEnter} onToggleAll={handleToggleAll} />
+                            <MatchTier title="Possible Matches" matches={tieredMatches.possible} selectedIds={selectedIds} isSelectMode={isSelectMode} onPhotoClick={setSelectedPhoto} onPointerDown={handlePointerDown} onPointerEnter={handlePointerEnter} onToggleAll={handleToggleAll} />
                         </div>
                     )}
-                </div>
+                </main>
 
-                {/* Photo Modal for viewing matched photos */}
-                <PhotoModal
-                    isOpen={!!selectedPhoto}
-                    photo={selectedPhoto}
-                    photos={allMatches}
-                    currentIndex={selectedPhoto ? allMatches.findIndex(p => p.id === selectedPhoto.id) : 0}
-                    onClose={() => setSelectedPhoto(null)}
-                    onNavigate={(index) => setSelectedPhoto(allMatches[index])}
-                />
+                <input type="file" ref={fileInputRef} className={styles.hiddenInput} onChange={handleFileUpload} accept="image/*" />
 
-                {isSelectMode && selectedIds.size > 0 && (
-                    <div className={styles.bulkActionsBar}>
-                        <span className={styles.selectionInfo}>{selectedIds.size} selected</span>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button className={`${styles.bulkBtn} ${styles.bulkBtnDownload}`} onClick={handleBulkDownload}>
-                                <span className="material-symbols-outlined">download</span>
-                                <span>Download</span>
-                            </button>
-                            {canDeleteSelected() && (
-                                <button className={`${styles.bulkBtn} ${styles.bulkBtnDelete}`} onClick={handleBulkDelete}>
-                                    <span className="material-symbols-outlined">delete</span>
-                                    <span>Delete</span>
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                {searchStatus !== 'none' && (
+                    <StatusModal
+                        type={searchStatus as any}
+                        onClose={() => { setSearchStatus('none'); if (searchStatus !== 'searching' && allPhotos.length === 0) setMode('intro'); }}
+                        onRetry={() => { setSearchStatus('none'); setMode('intro'); setTimeout(() => fileInputRef.current?.click(), 100); }}
+                    />
                 )}
+
+                {isSelectMode && (
+                    <BulkActionsBar
+                        count={selectedIds.size}
+                        canDelete={canDeleteSelected}
+                        onDownload={handleBulkDownload}
+                        onDelete={handleBulkDelete}
+                    />
+                )}
+
+                <PhotoModal
+                    isOpen={!!selectedPhoto} photo={selectedPhoto} photos={allPhotos}
+                    currentIndex={selectedPhoto ? allPhotos.findIndex(p => p.id === selectedPhoto.id) : 0}
+                    onClose={() => setSelectedPhoto(null)} onNavigate={(index) => setSelectedPhoto(allPhotos[index])}
+                    onDelete={async (id) => {
+                        await deletePhotos(eventId, [id]);
+                        const remaining = allPhotos.filter(p => p.id !== id);
+                        setAllPhotos(remaining);
+                        setTieredMatches({
+                            excellent: remaining.filter(m => m.distance < 0.4),
+                            good: remaining.filter(m => m.distance >= 0.4 && m.distance < 0.5),
+                            possible: remaining.filter(m => m.distance >= 0.5 && m.distance < 0.6),
+                        });
+                    }}
+                    canDelete={selectedPhoto ? checkCanDelete(selectedPhoto) : false}
+                />
             </div>
         </PaperBackground>
     );
 }
-
-

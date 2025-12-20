@@ -1,9 +1,10 @@
+import { isHeic } from '@/lib/imageUtils';
+
 export function usePhotoUrl(link: string | undefined) {
     if (!link) return '';
-    const lower = link.toLowerCase();
 
     // If it's a HEIC/HEIF, route it through our proxy
-    if (lower.endsWith('.heic') || lower.endsWith('.heif')) {
+    if (isHeic(link)) {
         return `/api/photos?link=${encodeURIComponent(link)}`;
     }
 
@@ -13,9 +14,8 @@ export function usePhotoUrl(link: string | undefined) {
 
 export function getPhotoUrl(link: string | undefined) {
     if (!link) return '';
-    const lower = link.toLowerCase();
 
-    if (lower.endsWith('.heic') || lower.endsWith('.heif')) {
+    if (isHeic(link)) {
         return `/api/photos?link=${encodeURIComponent(link)}`;
     }
 

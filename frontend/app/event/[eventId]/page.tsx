@@ -8,6 +8,7 @@ import ActionCard from '@/components/dashboard/ActionCard';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import QRCodeModal from '@/components/shared/QRCodeModal';
+import { getPhotoUrl } from '@/hooks/usePhotoUrl';
 
 interface EventData {
     eventId: string;
@@ -122,7 +123,7 @@ export default function EventPage() {
         );
     }
 
-    const coverImage = event.coverPageUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDg69gGD12xuf6pNQeB5PRSlY4n_NW-UaY9LZxBqYNpyjbKd8txI7EMm5ncxRtvioIPIVAgBUFlPkmQ0AmkNhB2XLO42rVL1pbXpgf9kRKcBivS3hiNdH2XFgwlLngsQhyRYMQeHtR2LwhBGUArQYtBjJa0g4yWgOeA6uNXTsFbTUpy9iAUG15sXIMUcCetjFtlPwslOtT_t2weU4wmGmPnGXaUQC1wdaMY5qUWIu0w8StR0WRWtklwfpf8ZKWtA12QDXYn1RD34MK4';
+    const coverImage = getPhotoUrl(event.coverPageUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDg69gGD12xuf6pNQeB5PRSlY4n_NW-UaY9LZxBqYNpyjbKd8txI7EMm5ncxRtvioIPIVAgBUFlPkmQ0AmkNhB2XLO42rVL1pbXpgf9kRKcBivS3hiNdH2XFgwlLngsQhyRYMQeHtR2LwhBGUArQYtBjJa0g4yWgOeA6uNXTsFbTUpy9iAUG15sXIMUcCetjFtlPwslOtT_t2weU4wmGmPnGXaUQC1wdaMY5qUWIu0w8StR0WRWtklwfpf8ZKWtA12QDXYn1RD34MK4');
 
     return (
         <PaperBackground>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { promises as fs } from "fs";
-import heicConvert from 'heic-convert';
+import { convertHeicToJpeg, isHeic } from "@/lib/heic-converter";
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -23,15 +23,11 @@ export async function GET(request: NextRequest) {
         }
 
         const lowerPath = absolutePath.toLowerCase();
-        if (lowerPath.endsWith('.heic') || lowerPath.endsWith('.heif')) {
+        if (isHeic(lowerPath)) {
             const inputBuffer = await fs.readFile(absolutePath);
-            const outputBuffer = await heicConvert({
-                buffer: inputBuffer,
-                format: 'JPEG',
-                quality: 0.9 // Slightly lower for faster preview
-            });
+            const outputBuffer = await convertHeicToJpeg(inputBuffer, 0.9);
 
-            return new NextResponse(outputBuffer, {
+            return new NextResponse(new Uint8Array(outputBuffer), {
                 headers: {
                     'Content-Type': 'image/jpeg',
                     'Cache-Control': 'public, max-age=31536000, immutable'

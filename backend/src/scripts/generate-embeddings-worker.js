@@ -47,7 +47,12 @@ async function processFile(file, eventId, maxDim) {
 
         if (!detections || !detections.length) return { file, faces: 0, descriptors: [] };
 
-        const descriptors = detections.map(d => Array.from(d.descriptor));
+        // normalize descriptors to unit length to make distances/cosine comparable
+        const descriptors = detections.map(d => {
+            const arr = Array.from(d.descriptor);
+            const norm = Math.sqrt(arr.reduce((s, v) => s + v * v, 0)) || 1;
+            return arr.map(v => v / norm);
+        });
 
         // best-effort dispose
         try { tf.engine().disposeVariables && tf.engine().disposeVariables(); } catch (e) {}

@@ -11,6 +11,7 @@ function IconShare() {
 import { useEffect, useState, useRef, useCallback } from 'react';
 import QRCode from 'qrcode';
 import styles from './QRCodeModal.module.css';
+import { getPhotoUrl } from '@/hooks/usePhotoUrl';
 
 interface QRCodeModalProps {
     isOpen: boolean;
@@ -81,7 +82,7 @@ export default function QRCodeModal({ isOpen, onClose, eventCode, eventName, cov
             try {
                 const img = new Image();
                 img.crossOrigin = "anonymous";
-                img.src = coverPhotoUrl;
+                img.src = getPhotoUrl(coverPhotoUrl);
                 await new Promise((resolve, reject) => {
                     img.onload = resolve;
                     img.onerror = reject;
@@ -168,7 +169,6 @@ export default function QRCodeModal({ isOpen, onClose, eventCode, eventName, cov
         ctx.strokeRect(30, 30, width - 60, height - 60);
 
         // Decorative corner flourishes
-        const flourishSize = 40;
         ctx.strokeStyle = '#1C1C1C';
         ctx.lineWidth = 2;
 
@@ -213,7 +213,7 @@ export default function QRCodeModal({ isOpen, onClose, eventCode, eventName, cov
             try {
                 const img = new Image();
                 img.crossOrigin = "anonymous";
-                img.src = coverPhotoUrl;
+                img.src = getPhotoUrl(coverPhotoUrl);
                 await new Promise((resolve, reject) => {
                     img.onload = resolve;
                     img.onerror = reject;

@@ -26,3 +26,18 @@
   position: relative;
   z-index: 2;
 }
+
+/* Cover photo overlay - subtle background from event cover photo */
+.coverOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.15;
+  filter: sepia(0.1) contrast(0.9);
+  pointer-events: none;
+}
