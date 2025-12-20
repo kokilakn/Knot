@@ -5,6 +5,8 @@ import { Canvas, Image, ImageData, loadImage } from 'canvas';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { query } from '../db/client.js';
+import fs from 'fs/promises';
+import heicConvert from 'heic-convert';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,9 +53,21 @@ router.post('/match', async (req, res) => {
 
         await loadModels();
 
-        // Load image from base64
-        // Base64 format: data:image/jpeg;base64,...
-        const img = await loadImage(image);
+        // Detect HEIC base64
+        let finalImage = image;
+        if (typeof image === 'string' && (image.startsWith('data:image/heic') || image.startsWith('data:image/heif'))) {
+            console.log('[FaceMatch] HEIC base64 detected, converting...');
+            const base64Data = image.split(',')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            const jpegBuffer = await heicConvert({
+                buffer: buffer,
+                format: 'JPEG',
+                quality: 1
+            });
+            finalImage = jpegBuffer;
+        }
+
+        const img = await loadImage(finalImage);
         const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
 
         if (!detection) {
@@ -64,7 +78,7 @@ router.post('/match', async (req, res) => {
 
         // Fetch stored embeddings for this event
         console.log(`Fetching stored embeddings for event: ${eventId}`);
-        let dbQuery = 'SELECT id, link, vector FROM photos WHERE vector IS NOT NULL';
+        let dbQuery = 'SELECT p.id, p.link, p.vector, p.uploader_id, e.user_id as event_creator_id FROM photos p JOIN events e ON p.event_id = e.event_id WHERE p.vector IS NOT NULL';
         let params = [];
 
         if (eventId) {
@@ -75,7 +89,7 @@ router.post('/match', async (req, res) => {
             } else {
                 // If not a UUID, treat as a code and join with events table
                 dbQuery = `
-                    SELECT p.id, p.link, p.vector 
+                    SELECT p.id, p.link, p.vector, p.uploader_id, e.user_id as event_creator_id 
                     FROM photos p
                     JOIN events e ON p.event_id = e.event_id
                     WHERE p.vector IS NOT NULL AND e.code = $1
@@ -113,7 +127,9 @@ router.post('/match', async (req, res) => {
             matches: filteredMatches.map(m => ({
                 id: m.id,
                 link: m.link,
-                distance: m.distance
+                distance: m.distance,
+                uploaderId: m.uploader_id,
+                eventCreatorId: m.event_creator_id
             })),
             debug: {
                 totalembeddingsMatched: matches.length,
@@ -139,23 +155,44 @@ router.post('/process', async (req, res) => {
 
         await loadModels();
 
-        // Construct absolute path
-        // For POC, we assume the frontend is in the same parent dir as Knot
-        const absolutePath = path.join(__dirname, '../../../frontend/public', link);
-        console.log(`Processing embedding for: ${absolutePath}`);
+        const cleanLink = link.trim();
+        const absolutePath = path.join(__dirname, '../../../frontend/public', cleanLink);
+        console.log(`[FaceProcess] Processing embedding for: "${absolutePath}"`);
 
-        const img = await loadImage(absolutePath);
+        let img;
+        const lowerPath = absolutePath.toLowerCase();
+        const isHeic = lowerPath.endsWith('.heic') || lowerPath.endsWith('.heif');
+
+        if (isHeic) {
+            console.log(`[FaceProcess] HEIC/HEIF detected. Converting to JPEG: ${cleanLink}`);
+            try {
+                const inputBuffer = await fs.readFile(absolutePath);
+                const outputBuffer = await heicConvert({
+                    buffer: inputBuffer,
+                    format: 'JPEG',
+                    quality: 1
+                });
+                console.log(`[FaceProcess] Conversion successful. Output size: ${outputBuffer.length} bytes`);
+                img = await loadImage(outputBuffer);
+            } catch (convError) {
+                console.error(`[FaceProcess] HEIC conversion failed for ${cleanLink}:`, convError);
+                throw new Error(`Failed to convert HEIC image: ${convError.message}`);
+            }
+        } else {
+            console.log(`[FaceProcess] Standard image detected: ${cleanLink}`);
+            img = await loadImage(absolutePath);
+        }
         const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
 
         if (detection) {
             const descriptor = Array.from(detection.descriptor);
             const vectorStr = JSON.stringify(descriptor);
 
-            await query('UPDATE photos SET vector = $1 WHERE link = $2', [vectorStr, link]);
-            console.log(`  Embedding saved for ${link}`);
+            await query('UPDATE photos SET vector = $1 WHERE link = $2', [vectorStr, cleanLink]);
+            console.log(`  Embedding saved for ${cleanLink}`);
             res.json({ success: true, faceDetected: true });
         } else {
-            console.log(`  No face detected in ${link}`);
+            console.log(`  No face detected in ${cleanLink}`);
             res.json({ success: true, faceDetected: false });
         }
 

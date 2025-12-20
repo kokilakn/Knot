@@ -37,7 +37,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: var(--radius-xl);
     color: var(--text-primary);
     transition: all var(--transition-fast);
     background: transparent;
@@ -62,7 +62,7 @@
 .avatarLarge {
     width: 120px;
     height: 120px;
-    border-radius: 50%;
+    border-radius: var(--radius-xl);
     overflow: hidden;
     margin-bottom: var(--space-lg);
     box-shadow: var(--shadow-md);
@@ -127,7 +127,7 @@
     justify-content: space-between;
     padding: var(--space-lg);
     background: var(--bg-surface);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-xl);
     text-decoration: none;
     color: var(--text-primary);
     transition: all var(--transition-fast);
@@ -153,6 +153,18 @@
 .menuItemIcon {
     color: var(--color-logo);
     display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--color-paper);
+    border-radius: var(--radius-xl);
+    transition: all var(--transition-fast);
+}
+
+.logoutBtn .menuItemIcon {
+    color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error), transparent 90%);
 }
 
 .menuItemText {
@@ -164,9 +176,7 @@
     /* Standard red for logout */
 }
 
-.logoutBtn .menuItemIcon {
-    color: var(--color-error);
-}
+
 
 .logoutBtn:hover {
     border-color: color-mix(in srgb, var(--color-error), transparent 80%);

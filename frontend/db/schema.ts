@@ -61,9 +61,11 @@ export const photos = pgTable("photos", {
     // Since we are pushing to a local DB that has the extension, we can define it carefully
     vector: text("vector"), // Placeholder for storage, will need cast or custom type for actual vector ops
     eventId: uuid("event_id").notNull().references(() => events.eventId, { onDelete: 'cascade' }),
+    uploaderId: uuid("uploader_id").references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => {
     return [
         index("idx_photos_event_id").on(table.eventId),
+        index("idx_photos_uploader_id").on(table.uploaderId),
     ];
 });

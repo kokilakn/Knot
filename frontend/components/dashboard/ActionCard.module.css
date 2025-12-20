@@ -36,7 +36,7 @@
 
 .card:hover {
   background: var(--color-accent);
-  box-shadow: 0 12px 32px rgba(28, 28, 28, 0.15);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--color-ink), transparent 85%);
 }
 
 .card:active {
@@ -50,7 +50,7 @@
   width: 100%;
   background: var(--color-accent);
   border-radius: var(--radius-xl);
-  box-shadow: 0 8px 24px rgba(95, 111, 130, 0.25);
+  box-shadow: 0 8px 24px color-mix(in srgb, #5f6f82, transparent 75%);
   padding: 1.5rem;
   border: none;
   cursor: pointer;
@@ -76,7 +76,7 @@
 }
 
 .prominent:hover {
-  box-shadow: 0 12px 32px rgba(95, 111, 130, 0.35);
+  box-shadow: 0 12px 32px color-mix(in srgb, #5f6f82, transparent 65%);
 }
 
 .prominent:active {
@@ -98,22 +98,22 @@
 }
 
 .card .icon {
-  background: var(--color-border);
-  color: var(--color-accent);
+  background: var(--color-primary-dark);
+  color: var(--color-paper);
 }
 
 .card:hover .icon {
-  background: var(--color-surface);
-  color: var(--color-accent);
+  background: var(--color-paper);
+  color: var(--color-primary-dark);
   backdrop-filter: none;
   border: none;
 }
 
 .prominent .icon {
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--color-paper), transparent 85%);
   color: var(--color-paper);
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid color-mix(in srgb, var(--color-paper), transparent 90%);
 }
 
 /* Text container */
@@ -179,9 +179,9 @@
 }
 
 .card:hover .trailingIcon {
-  color: rgba(246, 243, 239, 0.5);
+  color: color-mix(in srgb, #f6f3ef, transparent 50%);
 }
 
 .prominent .trailingIcon {
-  color: rgba(246, 243, 239, 0.5);
+  color: color-mix(in srgb, #f6f3ef, transparent 50%);
 }

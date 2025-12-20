@@ -9,7 +9,7 @@ async function initDb() {
         id SERIAL PRIMARY KEY,
         link TEXT NOT NULL,
         event_id TEXT,
-        face_embedding TEXT,
+        vector TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

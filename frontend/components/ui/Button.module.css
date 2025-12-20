@@ -93,7 +93,7 @@
     background-color: var(--btn-color);
     color: var(--btn-text-color);
     border-color: var(--btn-color);
-    box-shadow: 0 1px 3px rgba(28, 28, 28, 0.08);
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--color-ink), transparent 92%);
     opacity: 0.9;
 }
 
@@ -202,12 +202,12 @@
 }
 
 .btn--ghost:hover {
-    background-color: rgba(95, 111, 130, 0.08);
+    background-color: color-mix(in srgb, #5f6f82, transparent 92%);
     color: var(--color-ink);
 }
 
 .btn--ghost:active {
-    background-color: rgba(95, 111, 130, 0.12);
+    background-color: color-mix(in srgb, #5f6f82, transparent 88%);
 }
 
 .btn--ghost:disabled {

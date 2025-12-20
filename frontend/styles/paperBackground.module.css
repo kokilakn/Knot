@@ -10,7 +10,6 @@
   overflow: auto;
 }
 
-/* Paper grain texture - subtle fractal noise overlay */
 .paperBackground::before {
   content: '';
   position: fixed;

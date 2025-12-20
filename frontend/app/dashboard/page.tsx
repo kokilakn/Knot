@@ -9,7 +9,10 @@ import Link from 'next/link';
 import { useUser } from '@/lib/UserContext';
 import { useEffect, useState } from 'react';
 
+// ... (icons and helpers stay the same, I will use a StartLine valid for the returns)
+
 function IconPlus() {
+  // ...
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -92,12 +95,10 @@ export default function DashboardPage() {
   // Show nothing while loading/redirecting
   if (loading || !user) {
     return (
-      <PaperBackground>
-        <div className={styles.container} style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <Spinner size="lg" color="accent" />
-          <p style={{ color: 'var(--text-subtle)' }}>Loading...</p>
-        </div>
-      </PaperBackground>
+      <div className={styles.container} style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <Spinner size="lg" color="accent" />
+        <p style={{ color: 'var(--text-subtle)' }}>Loading...</p>
+      </div>
     );
   }
 

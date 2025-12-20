@@ -12,12 +12,57 @@
     display: flex;
     align-items: center;
     gap: var(--space-md);
+    position: sticky;
+    top: 0;
+    background: var(--color-border);
+    backdrop-filter: blur(8px);
+    padding: var(--space-md) 0;
+    z-index: 10;
 }
 
 .title {
     font-family: var(--font-serif);
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: var(--text-primary);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 1.1rem;
+    }
+}
+
+.countBadge {
+    background: var(--color-accent);
+    color: var(--color-paper);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    min-width: 2rem;
+    text-align: center;
+}
+
+.selectBtn {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    background: color-mix(in srgb, var(--color-primary-dark), transparent 94%);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+}
+
+.selectBtn.active {
+    background: var(--color-primary-dark);
+    color: white;
 }
 
 .iconBtn {
@@ -26,7 +71,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: var(--radius-xl);
     color: var(--text-primary);
     background: transparent;
     border: none;
@@ -66,7 +111,7 @@
     width: 120px;
     height: 120px;
     background: var(--color-paper);
-    border-radius: 50%;
+    border-radius: var(--radius-xl);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -115,7 +160,27 @@
     padding: var(--space-lg);
     display: flex;
     justify-content: center;
+    align-items: center;
+    gap: var(--space-xl);
     background: linear-gradient(to top, rgba(28, 28, 28, 0.5), transparent);
+}
+
+.flipBtn {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: rgba(246, 243, 239, 0.2);
+    border: none;
+    color: var(--color-paper);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-fast);
+}
+
+.flipBtn:hover {
+    background: rgba(246, 243, 239, 0.3);
 }
 
 .captureBtn {
@@ -152,10 +217,50 @@
     width: 100%;
 }
 
+/* Tier Sections */
+.tierSection {
+    width: 100%;
+    margin-bottom: var(--space-xl);
+}
+
+.tierTitle {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-xs);
+    border-bottom: 1px solid var(--border-default);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tierActions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.textBtn {
+    background: transparent;
+    border: none;
+    color: var(--color-accent);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: var(--space-xs);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.textBtn:hover {
+    background: color-mix(in srgb, var(--color-accent), transparent 90%);
+}
+
 .resultsGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--space-lg);
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--space-md);
     width: 100%;
 }
 
@@ -166,29 +271,161 @@
     border: 1px solid var(--border-default);
     position: relative;
     aspect-ratio: 1;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
-.userEntry {
-    border: 2px solid var(--color-accent);
+.resultCard.selecting {
+    touch-action: pan-y;
+}
+
+.resultCard:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.resultCard.selected {
+    outline: 3px solid var(--color-accent);
+    outline-offset: -3px;
+    transform: scale(0.95);
+}
+
+.selectionOverlay {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    background: color-mix(in srgb, var(--color-paper), transparent 10%);
+    border: 1.5px solid var(--color-ink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.selected .selectionOverlay {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.checkBadge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 3;
+    color: var(--color-paper);
+    background: var(--color-accent);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.checkBadge span {
+    font-size: 1.25rem;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+.selected .selectionOverlay::after {
+    content: 'check';
+    font-family: 'Material Symbols Outlined';
+    font-size: 14px;
+    color: white;
 }
 
 .resultImg {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: opacity var(--transition-base);
 }
 
-.matchScore {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+.selected .resultImg {
+    opacity: 0.8;
+}
+
+.bulkActionsBar {
+    position: fixed;
+    bottom: var(--space-xl);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-paper);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    z-index: 100;
+    border: 1px solid var(--color-border);
+    animation: barSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes barSlideUp {
+    from {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+.selectionInfo {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.bulkBtn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
     padding: var(--space-xs);
-    background: rgba(28, 28, 28, 0.6);
-    color: var(--color-paper);
-    font-size: 0.8rem;
-    text-align: center;
-    backdrop-filter: blur(4px);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.bulkBtnDownload {
+    color: var(--color-primary-dark);
+}
+
+.bulkBtn:hover {
+    background: color-mix(in srgb, var(--color-ink), transparent 95%);
+}
+
+.bulkBtnDelete {
+    color: var(--color-error);
+}
+
+.bulkBtnDelete:hover {
+    background: color-mix(in srgb, var(--color-error), transparent 95%);
 }
 
 .spinner {

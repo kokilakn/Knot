@@ -14,17 +14,17 @@
    /* -------------------------------------------------------------------------
      Core Color Tokens
      ------------------------------------------------------------------------- */
-   --color-paper: #F7F5F2;
+   --color-paper: #F6F3EF;
    --color-ink: #1C1C1C;
    --color-ink-muted: #4A4A4A;
    --color-ink-subtle: #7A7A7A;
-   --color-accent: #334351;
-   --color-accent-active: #1A252F;
-   --color-border: #E4DED7;
-   --color-surface: var(--color-paper);
+   --color-accent: #5F6F82;
+   --color-accent-active: #4A5A6B;
+   --color-border: #E2DED8;
+   --color-surface: #FFFFFF;
    /* cards only */
-   --color-primary-dark: #334351;
-   --color-logo: #334351;
+   --color-primary-dark: #5F6F82;
+   --color-logo: #5F6F82;
    --color-error: #8C2F2F;
    /* Deep red for paper */
    --color-success: #3D5A45;
@@ -73,9 +73,9 @@
    /* -------------------------------------------------------------------------
      Border Radius
      ------------------------------------------------------------------------- */
-   --radius-sm: 3px;
-   --radius-md: 4px;
-   --radius-lg: 6px;
+   --radius-sm: 1.25rem;
+   --radius-md: 1.25rem;
+   --radius-lg: 1.25rem;
    --radius-xl: 1.25rem;
 
    /* -------------------------------------------------------------------------
@@ -88,8 +88,8 @@
    /* -------------------------------------------------------------------------
      Shadows (very subtle, editorial)
      ------------------------------------------------------------------------- */
-   --shadow-sm: 0 1px 2px rgba(28, 28, 28, 0.04);
-   --shadow-md: 0 2px 6px rgba(28, 28, 28, 0.06);
-   --shadow-lg: 0 4px 12px rgba(28, 28, 28, 0.08);
-   --shadow-floating-nav: 0 8px 30px rgba(28, 28, 28, 0.06);
+   --shadow-sm: 0 1px 2px color-mix(in srgb, var(--color-ink), transparent 96%);
+   --shadow-md: 0 2px 6px color-mix(in srgb, var(--color-ink), transparent 94%);
+   --shadow-lg: 0 4px 12px color-mix(in srgb, var(--color-ink), transparent 92%);
+   --shadow-floating-nav: 0 8px 30px color-mix(in srgb, var(--color-ink), transparent 94%);
 }

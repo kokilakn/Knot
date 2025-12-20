@@ -5,6 +5,7 @@ import { eq, or, desc } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import path from "path";
 import { promises as fs } from "fs";
+import { BACKEND_URL } from "@/lib/constants";
 
 // Helper to find event
 async function findEvent(idOrCode: string) {
@@ -27,11 +28,6 @@ export async function GET(
     try {
         const { eventId } = await context.params;
 
-        // We allow public access to gallery if they have the link/ID? 
-        // Or restrict to participants? For now, let's restrict to authenticated users at least?
-        // The user requirements didn't specify strict privacy, but let's at least check auth.
-        // Actually, guests might need to see it too. Let's just check event exists.
-
         const event = await findEvent(eventId);
 
         if (event.length === 0) {
@@ -43,8 +39,16 @@ export async function GET(
             .where(eq(photos.eventId, event[0].eventId))
             .orderBy(desc(photos.createdAt));
 
+        // Return full photo objects for permission checks
         return NextResponse.json({
-            photos: eventPhotos.map(p => p.link)
+            photos: eventPhotos.map(p => p.link),
+            photoDetails: eventPhotos.map(p => ({
+                id: p.id,
+                link: p.link,
+                uploaderId: p.uploaderId,
+                createdAt: p.createdAt,
+            })),
+            eventCreatorId: event[0].userId,
         });
 
     } catch (error) {
@@ -60,8 +64,6 @@ export async function POST(
 ) {
     try {
         const user = await getSession();
-        // If we want guests to contribute, we might relax this, but let's assume auth required for now (or guest session).
-        // Since we have guest login, user should be present.
 
         if (!user) {
             return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -100,24 +102,27 @@ export async function POST(
 
             await fs.writeFile(path.join(uploadDir, filename), buffer);
 
-            // Insert into database
+            // Insert into database with uploaderId
             await db.insert(photos).values({
                 link: link,
                 eventId: event[0].eventId,
+                uploaderId: user.id,
             });
 
-            // Trigger background processing (await to ensure it's sent, but continues loop)
-            try {
-                const processRes = await fetch('http://localhost:5000/api/faces/process', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ link, eventId: event[0].eventId })
-                });
-                const processData = await processRes.json();
-                console.log(`Face processing triggered for ${link}:`, processData);
-            } catch (err) {
-                console.error(`Face processing trigger failed for ${link}:`, err);
-            }
+            // Fire-and-forget: Trigger background face processing (non-blocking)
+            // Using void to explicitly indicate we don't wait for this
+            void (async () => {
+                try {
+                    await fetch(`${BACKEND_URL}/api/faces/process`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ link, eventId: event[0].eventId })
+                    });
+                    console.log(`Face processing triggered for ${link}`);
+                } catch (err) {
+                    console.error(`Face processing trigger failed for ${link}:`, err);
+                }
+            })();
 
             savedPaths.push(link);
         }
@@ -129,3 +134,77 @@ export async function POST(
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
+
+// DELETE: Delete a photo
+export async function DELETE(
+    request: NextRequest,
+    context: { params: Promise<{ eventId: string }> }
+) {
+    try {
+        const user = await getSession();
+
+        if (!user) {
+            return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+        }
+
+        const { eventId } = await context.params;
+        const event = await findEvent(eventId);
+
+        if (event.length === 0) {
+            return NextResponse.json({ error: "Event not found" }, { status: 404 });
+        }
+
+        const { photoIds } = await request.json();
+
+        if (!photoIds || !Array.isArray(photoIds) || photoIds.length === 0) {
+            return NextResponse.json({ error: "No photo IDs provided" }, { status: 400 });
+        }
+
+        const isEventCreator = event[0].userId === user.id;
+
+        // Fetch photos to check permissions
+        const photosToDelete = await db.select().from(photos)
+            .where(eq(photos.eventId, event[0].eventId));
+
+        const deletedPhotos: string[] = [];
+        const errors: string[] = [];
+
+        for (const photoId of photoIds) {
+            const photo = photosToDelete.find(p => p.id === photoId);
+
+            if (!photo) {
+                errors.push(`Photo ${photoId} not found`);
+                continue;
+            }
+
+            // Check permission: Event creator can delete any, uploader can delete their own
+            if (!isEventCreator && photo.uploaderId !== user.id) {
+                errors.push(`No permission to delete photo ${photoId}`);
+                continue;
+            }
+
+            // Delete file from filesystem
+            try {
+                const filePath = path.join(process.cwd(), "public", photo.link);
+                await fs.unlink(filePath);
+            } catch (err) {
+                console.error(`Failed to delete file ${photo.link}:`, err);
+            }
+
+            // Delete from database
+            await db.delete(photos).where(eq(photos.id, photoId));
+            deletedPhotos.push(photoId);
+        }
+
+        return NextResponse.json({
+            success: true,
+            deleted: deletedPhotos,
+            errors: errors.length > 0 ? errors : undefined,
+        });
+
+    } catch (error) {
+        console.error("Delete photos error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}
+

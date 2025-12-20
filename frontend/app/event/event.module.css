@@ -41,16 +41,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    color: var(--text-primary);
-    transition: background-color var(--transition-fast);
-    background: transparent;
+    border-radius: var(--radius-xl);
+    ;
+    color: var(--color-paper);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+    background: var(--color-primary-dark);
     border: none;
     cursor: pointer;
 }
 
 .iconBtn:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: var(--color-paper);
+    color: var(--color-primary-dark);
 }
 
 /* Event Title Section (Matches Dashboard Greeting) */
@@ -74,7 +76,6 @@
 .eventTitle {
     font-family: var(--font-serif);
     font-size: 3rem;
-    /* Slightly larger for Event Title? Dashboard is 2rem. Let's stick to Dashboard 2rem or maybe 2.5rem for specific event title impact. User said "Kok's Wedding" - title is important. create-event uses 3rem. Dashboard uses 2rem. I will use 3rem to match Create Event title impact, or 2.5. Let's go with 3rem for elegance */
     font-size: 3rem;
     font-weight: 400;
     color: var(--text-primary);

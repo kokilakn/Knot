@@ -1,0 +1,169 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: color-mix(in srgb, var(--color-ink), transparent 10%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--space-md);
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-lg);
+}
+
+.closeBtn {
+    position: fixed;
+    top: var(--space-md);
+    right: var(--space-md);
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-paper), transparent 80%);
+    border: none;
+    color: var(--color-paper);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    z-index: 1001;
+}
+
+.closeBtn:hover {
+    background: color-mix(in srgb, var(--color-paper), transparent 70%);
+}
+
+/* Navigation buttons */
+.navBtn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3.5rem;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-paper), transparent 85%);
+    border: 1px solid color-mix(in srgb, var(--color-paper), transparent 70%);
+    color: var(--color-paper);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    z-index: 1001;
+}
+
+.navBtn:hover {
+    background: color-mix(in srgb, var(--color-paper), transparent 70%);
+    transform: translateY(-50%) scale(1.05);
+}
+
+.navPrev {
+    left: var(--space-md);
+}
+
+.navNext {
+    right: var(--space-md);
+}
+
+.counter {
+    position: absolute;
+    top: calc(-1 * var(--space-lg) - 1.5rem);
+    background: color-mix(in srgb, var(--color-ink), transparent 30%);
+    color: var(--color-paper);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(4px);
+}
+
+.imageContainer {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.image {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    display: block;
+}
+
+.actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+}
+
+.actionBtn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-lg);
+    background: color-mix(in srgb, var(--color-paper), transparent 85%);
+    border: 1px solid color-mix(in srgb, var(--color-paper), transparent 70%);
+    border-radius: var(--radius-md);
+    color: var(--color-paper);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.actionBtn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-paper), transparent 75%);
+}
+
+.actionBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.deleteBtn {
+    background: color-mix(in srgb, #8c2f2f, transparent 70%);
+    border-color: color-mix(in srgb, #8c2f2f, transparent 50%);
+}
+
+.deleteBtn:hover:not(:disabled) {
+    background: color-mix(in srgb, #8c2f2f, transparent 50%);
+}
+
+/* Mobile adjustments for nav buttons */
+@media (max-width: 600px) {
+    .navBtn {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    .navPrev {
+        left: var(--space-xs);
+    }
+
+    .navNext {
+        right: var(--space-xs);
+    }
+}

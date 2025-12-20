@@ -14,11 +14,28 @@ export default function ContributePage() {
     const [mode, setMode] = useState<'select' | 'camera'>('select');
     const [isCapturing, setIsCapturing] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [intervalSecs, setIntervalSecs] = useState(5);
+    const [intervalSecs, setIntervalSecs] = useState<number | null>(null);
+    const [customSecs, setCustomSecs] = useState<string>('');
     const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
+    const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+    const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Check for multiple cameras
+    useEffect(() => {
+        async function checkCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(d => d.kind === 'videoinput');
+                setHasMultipleCameras(videoDevices.length > 1);
+            } catch {
+                setHasMultipleCameras(false);
+            }
+        }
+        checkCameras();
+    }, []);
 
     useEffect(() => {
         if (eventId) {
@@ -32,10 +49,10 @@ export default function ContributePage() {
     }, [eventId]);
 
     // Camera setup
-    const startCamera = async () => {
+    const startCamera = async (mode: 'user' | 'environment' = facingMode) => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment' }
+                video: { facingMode: mode }
             });
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
@@ -45,6 +62,13 @@ export default function ContributePage() {
             alert("Could not access camera. Please allow permissions.");
             setMode('select');
         }
+    };
+
+    const handleFlipCamera = async () => {
+        stopCamera();
+        const newMode = facingMode === 'user' ? 'environment' : 'user';
+        setFacingMode(newMode);
+        await startCamera(newMode);
     };
 
     const stopCamera = () => {
@@ -116,7 +140,7 @@ export default function ContributePage() {
             canvas.toBlob(async (blob) => {
                 if (blob) {
                     const dataUrl = URL.createObjectURL(blob);
-                    setCapturedPhotos(prev => [dataUrl, ...prev]);
+                    setCapturedPhotos(prev => [dataUrl, ...prev].slice(0, 30));
 
                     // Auto-upload
                     const formData = new FormData();
@@ -139,9 +163,22 @@ export default function ContributePage() {
         }
     }, [eventId]);
 
+    const handleCaptureToggle = () => {
+        if (isCapturing) {
+            setIsCapturing(false);
+        } else {
+            if (intervalSecs === null) {
+                // Immediate single capture
+                capturePhoto();
+            } else {
+                setIsCapturing(true);
+            }
+        }
+    };
+
     // Interval logic
     useEffect(() => {
-        if (isCapturing) {
+        if (isCapturing && intervalSecs !== null) {
             intervalIdRef.current = setInterval(capturePhoto, intervalSecs * 1000);
         } else {
             if (intervalIdRef.current) clearInterval(intervalIdRef.current);
@@ -179,7 +216,7 @@ export default function ContributePage() {
                     {mode === 'select' ? (
                         <div className={styles.selectionGrid}>
                             <button className={styles.optionCard} onClick={() => fileInputRef.current?.click()}>
-                                <span className={`${styles.optionIcon} material-symbols-outlined`}>upload_file</span>
+                                <span className={`${styles.optionIcon} material-symbols-outlined`} style={{ fontSize: '3rem' }}>upload_file</span>
                                 <span className={styles.optionLabel}>Upload Photos</span>
                             </button>
                             <input
@@ -192,42 +229,81 @@ export default function ContributePage() {
                             />
 
                             <button className={styles.optionCard} onClick={handleCameraMode}>
-                                <span className={`${styles.optionIcon} material-symbols-outlined`}>photo_camera</span>
+                                <span className={`${styles.optionIcon} material-symbols-outlined`} style={{ fontSize: '3rem' }}>photo_camera</span>
                                 <span className={styles.optionLabel}>Use Camera</span>
                             </button>
                         </div>
                     ) : (
                         <>
                             <div className={styles.cameraContainer}>
-                                <video ref={videoRef} autoPlay playsInline className={styles.video} muted />
+                                <video
+                                    ref={videoRef}
+                                    autoPlay
+                                    playsInline
+                                    className={styles.video}
+                                    muted
+                                    onDoubleClick={handleFlipCamera}
+                                />
+
+                                {hasMultipleCameras && (
+                                    <div className={styles.flipHint}>
+                                        Double-tap to switch
+                                    </div>
+                                )}
 
                                 <div className={styles.overlay}>
-                                    <div className={styles.setting}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>timer</span>
-                                        <span>Interval: {intervalSecs}s</span>
-                                        <input
-                                            type="range"
-                                            min="1"
-                                            max="60"
-                                            value={intervalSecs}
-                                            onChange={(e) => setIntervalSecs(parseInt(e.target.value))}
-                                            style={{ width: '100px', cursor: 'pointer' }}
-                                        />
-                                    </div>
                                     <button
                                         className={`${styles.captureBtn} ${isCapturing ? styles.recording : ''}`}
-                                        onClick={() => setIsCapturing(!isCapturing)}
-                                        aria-label={isCapturing ? "Stop Capturing" : "Start Capturing"}
+                                        onClick={handleCaptureToggle}
+                                        aria-label={isCapturing ? "Stop Capturing" : "Capture Photo"}
                                     />
-                                    <span style={{ color: 'var(--color-paper)', textShadow: '0 1px 2px rgba(28, 28, 28, 0.5)' }}>
-                                        {isCapturing ? 'Capturing...' : 'Tap to Start'}
+                                    <span style={{ color: 'var(--color-paper)', textShadow: '0 1px 2px rgba(28, 28, 28, 0.5)', marginTop: '8px', fontSize: '0.875rem' }}>
+                                        {isCapturing ? 'Capturing...' : (intervalSecs === null ? 'Tap to Capture' : 'Tap to Start Auto')}
                                     </span>
-                                    {isUploading && (
-                                        <div className={styles.uploadBadge}>
-                                            <Spinner size="sm" color="paper" />
-                                            <span>Syncing...</span>
+                                </div>
+                                {isUploading && (
+                                    <div className={styles.uploadBadge}>
+                                        <Spinner size="sm" color="paper" />
+                                        <span>Syncing...</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className={styles.intervalSection}>
+                                <div className={styles.intervalLabel}>Auto-Capture Interval:</div>
+                                <div className={styles.intervalSelector}>
+                                    {[null, 5, 15, 30, 45, 60].map((val) => (
+                                        <button
+                                            key={val ?? 'no'}
+                                            className={`${styles.intervalBtn} ${intervalSecs === val ? styles.active : ''}`}
+                                            onClick={() => {
+                                                setIntervalSecs(val);
+                                                setIsCapturing(false);
+                                            }}
+                                        >
+                                            {val === null ? 'None' : `${val}s`}
+                                        </button>
+                                    ))}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto', paddingRight: '4px' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Custom</span>
+                                        <div className={styles.customInputWrapper}>
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                className={styles.customInput}
+                                                value={customSecs}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    setCustomSecs(val);
+                                                    setIntervalSecs(val === '' ? null : parseInt(val));
+                                                    setIsCapturing(false);
+                                                }}
+                                                placeholder="0"
+                                            />
+                                            <span className={styles.unit}>s</span>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
 

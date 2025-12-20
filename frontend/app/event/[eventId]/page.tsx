@@ -179,6 +179,7 @@ export default function EventPage() {
                     onClose={() => setShowQRModal(false)}
                     eventCode={event.code}
                     eventName={event.name}
+                    coverPhotoUrl={event.coverPageUrl}
                 />
             </div>
         </PaperBackground>

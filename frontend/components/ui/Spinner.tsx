@@ -23,21 +23,41 @@ export const Spinner: React.FC<SpinnerProps> = ({
 
     return (
         <div className={classNames} role="status">
-            <svg
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                className={styles.spinner__svg}
-            >
+            {/* K-branded spinner with rotating ring and pulsing K */}
+            <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" className={styles.spinner__svg}>
+                {/* Outer rotating ring */}
                 <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
+                    cx="25"
+                    cy="25"
+                    r="20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    className={styles.spinner__ring}
+                    opacity="0.2"
+                />
+                {/* Animated arc */}
+                <circle
+                    cx="25"
+                    cy="25"
+                    r="20"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="3"
                     strokeLinecap="round"
-                    className={styles.spinner__circle}
+                    className={styles.spinner__arc}
                 />
+                {/* Center K letter */}
+                <text
+                    x="25"
+                    y="33"
+                    textAnchor="middle"
+                    className={styles.spinner__letter}
+                    fill="currentColor"
+                >
+                    K
+                </text>
             </svg>
             <span className={styles.srOnly}>Loading...</span>
         </div>
@@ -45,3 +65,5 @@ export const Spinner: React.FC<SpinnerProps> = ({
 };
 
 export default Spinner;
+
+

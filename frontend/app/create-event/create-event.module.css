@@ -32,7 +32,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: var(--radius-xl);
+    ;
     color: var(--text-subtle);
     transition: background-color var(--transition-fast), color var(--transition-base);
     background: transparent;
@@ -348,7 +349,8 @@
     top: 4px;
     right: 4px;
     background: var(--color-paper);
-    border-radius: 50%;
+    border-radius: var(--radius-xl);
+    ;
     width: 20px;
     height: 20px;
     display: flex;

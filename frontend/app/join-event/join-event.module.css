@@ -32,7 +32,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: var(--radius-xl);
+    ;
     color: var(--text-subtle);
     transition: background-color var(--transition-fast), color var(--transition-base);
     background: transparent;
@@ -126,7 +127,8 @@
 .qrIconCircle {
     width: 4rem;
     height: 4rem;
-    border-radius: 50%;
+    border-radius: var(--radius-xl);
+    ;
     background: var(--color-surface);
     display: flex;
     align-items: center;
@@ -281,13 +283,13 @@
     overflow: hidden;
     position: relative;
     background: var(--color-ink);
-    border: 2px solid rgba(246, 243, 239, 0.1);
-    box-shadow: 0 0 0 4px rgba(28, 28, 28, 0.5);
+    border: 2px solid color-mix(in srgb, var(--color-paper), transparent 90%);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-ink), transparent 50%);
     aspect-ratio: 1;
 }
 
 .closeScannerBtn {
-    background: rgba(246, 243, 239, 0.2);
+    background: color-mix(in srgb, var(--color-paper), transparent 80%);
     color: var(--color-paper);
     border: none;
     padding: var(--space-md) var(--space-xl);
@@ -303,7 +305,7 @@
 }
 
 .closeScannerBtn:hover {
-    background: rgba(246, 243, 239, 0.3);
+    background: color-mix(in srgb, var(--color-paper), transparent 70%);
 }
 
 .scannerTitle {
