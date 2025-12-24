@@ -20,7 +20,9 @@
     "db:push": "sh -c \"cd frontend && bun run db:push\"",
     "db:generate": "sh -c \"cd frontend && bun run db:generate\"",
     "db:migrate": "sh -c \"cd frontend && bun run db:migrate\"",
-    "db:studio": "sh -c \"cd frontend && bun run db:studio\""
+    "db:studio": "sh -c \"cd frontend && bun run db:studio\"",
+    "frontend:prod": "sh -c \"cd frontend && bun run build && bun run db:migrate && bun run start\"",
+    "backend:prod": "sh -c \"cd backend && bun run build && bun run db:migrate && bun run start\""
   },
   "engines": {
     "node": ">=18.0.0",
