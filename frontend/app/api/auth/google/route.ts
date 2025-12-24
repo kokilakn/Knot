@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 // GET: Redirect to Google OAuth
 export async function GET(request: NextRequest) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
-    const redirectUri = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/google/callback`;
+    const baseUrl = process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    const redirectUri = `${baseUrl}/api/auth/callback/google`;
 
     if (!clientId) {
         return NextResponse.redirect(new URL('/login?error=google_not_configured', request.url));
