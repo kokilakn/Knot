@@ -8,6 +8,13 @@
       "when": 1766040401354,
       "tag": "0000_nebulous_vivisector",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766563156013,
+      "tag": "0001_exotic_naoko",
+      "breakpoints": true
     }
   ]
 }

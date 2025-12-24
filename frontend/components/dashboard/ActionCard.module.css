@@ -8,7 +8,10 @@
   box-shadow: var(--shadow-sm);
   padding: 1.25rem;
   border: none;
-  transition: box-shadow var(--transition-base), transform var(--transition-fast), background-color var(--transition-base);
+  transition:
+    box-shadow var(--duration-base, 250ms) var(--ease-gentle, cubic-bezier(0.4, 0, 0.2, 1)),
+    transform var(--duration-fast, 150ms) var(--ease-snappy, cubic-bezier(0.2, 0.8, 0.2, 1)),
+    background-color var(--duration-base, 250ms) var(--ease-gentle, cubic-bezier(0.4, 0, 0.2, 1));
   cursor: pointer;
   text-align: left;
   gap: 1.25rem;
@@ -26,7 +29,7 @@
   background-repeat: repeat;
   background-size: 200px 200px;
   mix-blend-mode: overlay;
-  transition: opacity var(--transition-fast);
+  transition: opacity var(--duration-fast, 150ms) var(--ease-gentle, cubic-bezier(0.4, 0, 0.2, 1));
   z-index: 0;
 }
 
@@ -37,10 +40,12 @@
 .card:hover {
   background: var(--color-accent);
   box-shadow: 0 12px 32px color-mix(in srgb, var(--color-ink), transparent 85%);
+  transform: translateY(-2px);
 }
 
 .card:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.98);
+  transition-duration: var(--duration-instant, 100ms);
 }
 
 /* Prominent Card - Accent colored with texture */
@@ -77,10 +82,12 @@
 
 .prominent:hover {
   box-shadow: 0 12px 32px color-mix(in srgb, #5f6f82, transparent 65%);
+  transform: translateY(-2px);
 }
 
 .prominent:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.98);
+  transition-duration: var(--duration-instant, 100ms);
 }
 
 /* Icon */

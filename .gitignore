@@ -40,6 +40,8 @@ backend/node_modules/
 backend/dist/
 backend/coverage/   
 
-
 *.pack.gz
 *.pack.gz.old
+
+# Internal Documentation
+DEVELOPER_GUIDE.md

@@ -3,9 +3,10 @@ import { db } from "@/db";
 import { events, photos } from "@/db/schema";
 import { eq, or, desc } from "drizzle-orm";
 import { getSession } from "@/lib/session";
-import path from "path";
-import { promises as fs } from "fs";
 import { BACKEND_URL } from "@/lib/constants";
+import { storage } from "@/lib/storage";
+import { isHeic, convertHeicToJpeg } from "@/lib/heic-converter";
+import { optimizeImage } from "@/lib/image-optimizer";
 
 // Helper to find event
 async function findEvent(idOrCode: string) {
@@ -84,47 +85,76 @@ export async function POST(
             return NextResponse.json({ error: "No photos uploaded" }, { status: 400 });
         }
 
-        const uploadDir = path.join(process.cwd(), "public", "uploads", "events", code);
-        await fs.mkdir(uploadDir, { recursive: true });
-
         const savedPaths: string[] = [];
+        const savedIds: string[] = [];
 
         for (const file of files) {
             if (!(file instanceof File)) continue;
 
-            const buffer = Buffer.from(await file.arrayBuffer());
-            // unique filename
+            let buffer = Buffer.from(await file.arrayBuffer());
+            let contentType = file.type;
+            let ext = file.name.split('.').pop() || 'jpg';
+
+            // Convert HEIC to JPEG
+            if (isHeic(file.name) || contentType === 'image/heic' || contentType === 'image/heif') {
+                try {
+                    console.log(`Converting HEIC file: ${file.name}`);
+                    const converted = await convertHeicToJpeg(buffer);
+                    buffer = Buffer.from(converted); // Ensure it's a standard Buffer
+                    contentType = 'image/jpeg';
+                    ext = 'jpg';
+                } catch (convErr) {
+                    console.error(`HEIC conversion failed for ${file.name}, proceeding with original:`, convErr);
+                }
+            }
+
+            // Permanent Optimization (Lossy Compression)
+            try {
+                console.log(`Optimizing image: ${file.name}`);
+                buffer = await optimizeImage(buffer);
+                // After optimization, if it was PNG/other, it's now JPEG if optimizeImage defaults to it
+                contentType = 'image/jpeg';
+                ext = 'jpg';
+            } catch (optErr) {
+                console.error(`Image optimization failed for ${file.name}:`, optErr);
+            }
+
             const timestamp = Date.now();
             const random = Math.floor(Math.random() * 1000);
-            const ext = file.name.split('.').pop() || 'jpg';
-            const filename = `photo_${timestamp}_${random}.${ext}`;
-            const link = `/uploads/events/${code}/${filename}`;
+            const filename = `events/${code}/photo_${timestamp}_${random}.${ext}`;
 
-            await fs.writeFile(path.join(uploadDir, filename), buffer);
+            try {
+                // Upload via storage service
+                const link = await storage.upload(buffer, filename, contentType);
 
-            // Insert into database with uploaderId
-            await db.insert(photos).values({
-                link: link,
-                eventId: event[0].eventId,
-                uploaderId: user.id,
-            });
+                // Insert into database
+                const [inserted] = await db.insert(photos).values({
+                    link: link,
+                    eventId: event[0].eventId,
+                    uploaderId: user.id,
+                }).returning({ id: photos.id });
 
-            // Fire-and-forget: Trigger background face processing (non-blocking)
-            // Using void to explicitly indicate we don't wait for this
-            void (async () => {
-                try {
-                    await fetch(`${BACKEND_URL}/api/faces/process`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ link, eventId: event[0].eventId })
-                    });
-                    console.log(`Face processing triggered for ${link}`);
-                } catch (err) {
-                    console.error(`Face processing trigger failed for ${link}:`, err);
-                }
-            })();
+                savedPaths.push(link);
+                if (inserted) savedIds.push(inserted.id);
 
-            savedPaths.push(link);
+                // Fire-and-forget: Trigger background face processing
+                void (async () => {
+                    try {
+                        await fetch(`${BACKEND_URL}/api/faces/process`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ link, eventId: event[0].eventId })
+                        });
+                        console.log(`Face processing triggered for ${link}`);
+                    } catch (err) {
+                        console.error(`Face processing trigger failed for ${link}:`, err);
+                    }
+                })();
+
+            } catch (err) {
+                console.error(`Failed to upload photo ${filename}:`, err);
+                // Continue with other files? Or fail? Let's continue but log.
+            }
         }
 
         return NextResponse.json({ success: true, photos: savedPaths });
@@ -177,18 +207,18 @@ export async function DELETE(
                 continue;
             }
 
-            // Check permission: Event creator can delete any, uploader can delete their own
+            // Check permission
             if (!isEventCreator && photo.uploaderId !== user.id) {
                 errors.push(`No permission to delete photo ${photoId}`);
                 continue;
             }
 
-            // Delete file from filesystem
+            // Delete from Storage
             try {
-                const filePath = path.join(process.cwd(), "public", photo.link);
-                await fs.unlink(filePath);
+                await storage.delete(photo.link);
             } catch (err) {
-                console.error(`Failed to delete file ${photo.link}:`, err);
+                console.error(`Failed to delete file from storage ${photo.link}:`, err);
+                // Log and proceed to cleanup DB
             }
 
             // Delete from database
@@ -207,4 +237,6 @@ export async function DELETE(
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
+
+
 

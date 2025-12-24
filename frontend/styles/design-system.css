@@ -14,14 +14,14 @@
   /* -------------------------------------------------------------------------
      Core Color Tokens
      ------------------------------------------------------------------------- */
-  --color-paper: #F6F3EF;
+  --color-paper: #eef1f4;
   --color-ink: #1C1C1C;
   --color-ink-muted: #4A4A4A;
   --color-ink-subtle: #7A7A7A;
   --color-accent: #5F6F82;
   --color-accent-active: #4A5A6B;
   --color-border: #E2DED8;
-  --color-surface: #FFFFFF;
+  --color-surface: #f2eee9;
   /* cards only */
   --color-primary-dark: #5F6F82;
   --color-logo: #5F6F82;
@@ -93,4 +93,40 @@
   --shadow-md: 0 2px 6px color-mix(in srgb, var(--color-ink), transparent 94%);
   --shadow-lg: 0 4px 12px color-mix(in srgb, var(--color-ink), transparent 92%);
   --shadow-floating-nav: 0 8px 30px color-mix(in srgb, var(--color-ink), transparent 94%);
+
+  /* -------------------------------------------------------------------------
+     Animation Easing Functions (Premium Motion)
+     ------------------------------------------------------------------------- */
+  /* Smooth deceleration - great for entrances */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  /* Smooth acceleration + deceleration */
+  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
+  /* Spring-like bounce - subtle and elegant */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Gentle ease for micro-interactions */
+  --ease-gentle: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Snappy for quick responses */
+  --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* -------------------------------------------------------------------------
+     Animation Duration Tokens
+     ------------------------------------------------------------------------- */
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --duration-entrance: 500ms;
+  --duration-page: 600ms;
+
+  /* -------------------------------------------------------------------------
+     Animation Delay Scale (for staggering)
+     ------------------------------------------------------------------------- */
+  --stagger-1: 50ms;
+  --stagger-2: 100ms;
+  --stagger-3: 150ms;
+  --stagger-4: 200ms;
+  --stagger-5: 250ms;
+  --stagger-6: 300ms;
+  --stagger-7: 350ms;
+  --stagger-8: 400ms;
 }

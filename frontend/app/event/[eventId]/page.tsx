@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import styles from '../event.module.css';
 import PaperBackground from '@/components/PaperBackground';
 import ActionCard from '@/components/dashboard/ActionCard';
+import { PageTransition } from '@/components/shared/PageTransition';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import QRCodeModal from '@/components/shared/QRCodeModal';
@@ -127,62 +128,70 @@ export default function EventPage() {
 
     return (
         <PaperBackground>
-            <div className={styles.container}>
-                <header className={styles.header}>
-                    <div className={styles.headerLeft}>
-                        <Link href="/events" className={styles.iconBtn} aria-label="Go back">
-                            <IconBack />
-                        </Link>
-                        <div className={styles.logo}>Knot</div>
-                    </div>
-                    <button
-                        className={styles.iconBtn}
-                        aria-label="Share"
-                        onClick={() => setShowQRModal(true)}
-                    >
-                        <IconShare />
-                    </button>
-                </header>
+            <PageTransition>
+                <div className={styles.container}>
+                    <header className={styles.header}>
+                        <div className={styles.headerLeft}>
+                            <Link href="/events" className={styles.iconBtn} aria-label="Go back">
+                                <IconBack />
+                            </Link>
+                            <div className={styles.logo}>Knot</div>
+                        </div>
+                        <button
+                            className={styles.iconBtn}
+                            aria-label="Share"
+                            onClick={() => setShowQRModal(true)}
+                        >
+                            <IconShare />
+                        </button>
+                    </header>
 
-                <div
-                    className={styles.backgroundOverlay}
-                    style={{ backgroundImage: `url("${coverImage}")` }}
-                />
-
-                <section className={styles.eventHeader}>
-                    <p className={styles.eventSubtitle}>{formatDate(event.eventDate)}</p>
-                    <h1 className={styles.eventTitle}>{event.name}</h1>
-                </section>
-
-                <main className={styles.main}>
-                    <ActionCard
-                        icon={<IconGallery />}
-                        title="View Event Gallery"
-                        description="Browse the full collection of moments."
-                        onClick={() => router.push(`/event/${eventId}/gallery`)}
+                    <div
+                        className={styles.backgroundOverlay}
+                        style={{ backgroundImage: `url("${coverImage}")` }}
                     />
-                    <ActionCard
-                        icon={<IconFace />}
-                        title="Find My Photos"
-                        description="Scan your face to discover your moments."
-                        onClick={() => router.push(`/event/${eventId}/find-face`)}
-                    />
-                    <ActionCard
-                        icon={<IconAdd />}
-                        title="Contribute to Event"
-                        description="Upload images or use your camera."
-                        onClick={() => router.push(`/event/${eventId}/contribute`)}
-                    />
-                </main>
 
-                <QRCodeModal
-                    isOpen={showQRModal}
-                    onClose={() => setShowQRModal(false)}
-                    eventCode={event.code}
-                    eventName={event.name}
-                    coverPhotoUrl={event.coverPageUrl}
-                />
-            </div>
+                    <section className={`${styles.eventHeader} animate-fade-in animate-delay-1`}>
+                        <p className={styles.eventSubtitle}>{formatDate(event.eventDate)}</p>
+                        <h1 className={styles.eventTitle}>{event.name}</h1>
+                    </section>
+
+                    <main className={styles.main}>
+                        <div className="animate-fade-in animate-delay-2">
+                            <ActionCard
+                                icon={<IconGallery />}
+                                title="View Event Gallery"
+                                description="Browse the full collection of moments."
+                                onClick={() => router.push(`/event/${eventId}/gallery`)}
+                            />
+                        </div>
+                        <div className="animate-fade-in animate-delay-3">
+                            <ActionCard
+                                icon={<IconFace />}
+                                title="Find My Photos"
+                                description="Scan your face to discover your moments."
+                                onClick={() => router.push(`/event/${eventId}/find-face`)}
+                            />
+                        </div>
+                        <div className="animate-fade-in animate-delay-4">
+                            <ActionCard
+                                icon={<IconAdd />}
+                                title="Contribute to Event"
+                                description="Upload images or use your camera."
+                                onClick={() => router.push(`/event/${eventId}/contribute`)}
+                            />
+                        </div>
+                    </main>
+
+                    <QRCodeModal
+                        isOpen={showQRModal}
+                        onClose={() => setShowQRModal(false)}
+                        eventCode={event.code}
+                        eventName={event.name}
+                        coverPhotoUrl={event.coverPageUrl}
+                    />
+                </div>
+            </PageTransition>
         </PaperBackground>
     );
 }

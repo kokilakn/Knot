@@ -3,6 +3,7 @@
 import PaperBackground from '@/components/PaperBackground';
 import ActionCard from '@/components/dashboard/ActionCard';
 import { Spinner } from '@/components/ui';
+import { PageTransition } from '@/components/shared/PageTransition';
 import styles from './dashboard.module.css';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -111,48 +112,56 @@ export default function DashboardPage() {
 
   return (
     <PaperBackground>
-      <div className={styles.container}>
-        <header className={styles.header}>
-          <h1 className={styles.logo}>Knot</h1>
-          <div className={styles.headerActions}>
-            <Link href="/profile" className={styles.avatar}>
-              <img
-                src={avatarUrl}
-                alt="User avatar"
+      <PageTransition>
+        <div className={styles.container}>
+          <header className={styles.header}>
+            <h1 className={styles.logo}>Knot</h1>
+            <div className={styles.headerActions}>
+              <Link href="/profile" className={styles.avatar}>
+                <img
+                  src={avatarUrl}
+                  alt="User avatar"
+                />
+              </Link>
+            </div>
+          </header>
+
+          <section className={`${styles.greeting} animate-fade-in animate-delay-1`}>
+            <p className={styles.greetingTime}>{getGreeting(user?.name?.split(' ')[0])}</p>
+            <h2 className={styles.greetingMessage}>
+              Find yourself in<br />
+              <span className={styles.greetingHighlight}>every photo.</span>
+            </h2>
+          </section>
+
+          <main className={styles.main}>
+            <div className="animate-fade-in animate-delay-2">
+              <ActionCard
+                icon={<IconPlus />}
+                title="Create an Event"
+                description="Start a new shared album"
+                onClick={() => router.push('/create-event')}
               />
-            </Link>
-          </div>
-        </header>
-
-        <section className={styles.greeting}>
-          <p className={styles.greetingTime}>{getGreeting(user?.name?.split(' ')[0])}</p>
-          <h2 className={styles.greetingMessage}>
-            Find yourself in<br />
-            <span className={styles.greetingHighlight}>every photo.</span>
-          </h2>
-        </section>
-
-        <main className={styles.main}>
-          <ActionCard
-            icon={<IconPlus />}
-            title="Create an Event"
-            description="Start a new shared album"
-            onClick={() => router.push('/create-event')}
-          />
-          <ActionCard
-            icon={<IconQR />}
-            title="Join an Event"
-            description="Scan or enter a code"
-            onClick={() => router.push('/join-event')}
-          />
-          <ActionCard
-            icon={<IconAlbum />}
-            title="My Events"
-            description={eventsDescription}
-            onClick={() => router.push('/events')}
-          />
-        </main>
-      </div>
+            </div>
+            <div className="animate-fade-in animate-delay-3">
+              <ActionCard
+                icon={<IconQR />}
+                title="Join an Event"
+                description="Scan or enter a code"
+                onClick={() => router.push('/join-event')}
+              />
+            </div>
+            <div className="animate-fade-in animate-delay-4">
+              <ActionCard
+                icon={<IconAlbum />}
+                title="My Events"
+                description={eventsDescription}
+                onClick={() => router.push('/events')}
+              />
+            </div>
+          </main>
+        </div>
+      </PageTransition>
     </PaperBackground>
   );
 }

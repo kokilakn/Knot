@@ -5,21 +5,27 @@
     right: 0;
     bottom: 0;
     background: color-mix(in srgb, var(--color-ink), transparent 10%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     padding: var(--space-md);
-    animation: fadeIn 0.2s ease-out;
+    animation: backdropFadeIn var(--duration-base, 250ms) var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1)) both;
 }
 
-@keyframes fadeIn {
+@keyframes backdropFadeIn {
     from {
         opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
     }
 
     to {
         opacity: 1;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
     }
 }
 
@@ -31,6 +37,20 @@
     flex-direction: column;
     align-items: center;
     gap: var(--space-lg);
+    animation: modalEnter var(--duration-slow, 400ms) var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1)) both;
+    animation-delay: 50ms;
+}
+
+@keyframes modalEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .closeBtn {
@@ -47,12 +67,19 @@
     border: none;
     color: var(--color-paper);
     cursor: pointer;
-    transition: background-color var(--transition-fast);
+    transition:
+        background-color var(--duration-fast, 150ms) var(--ease-gentle, cubic-bezier(0.4, 0, 0.2, 1)),
+        transform var(--duration-fast, 150ms) var(--ease-snappy, cubic-bezier(0.2, 0.8, 0.2, 1));
     z-index: 1001;
 }
 
 .closeBtn:hover {
     background: color-mix(in srgb, var(--color-paper), transparent 70%);
+    transform: scale(1.05);
+}
+
+.closeBtn:active {
+    transform: scale(0.95);
 }
 
 /* Navigation buttons */

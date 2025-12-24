@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styles from './find-face.module.css';
 import PaperBackground from '@/components/PaperBackground';
 import PhotoModal from '@/components/shared/PhotoModal';
+import { PageTransition } from '@/components/shared/PageTransition';
 import { useParams } from 'next/navigation';
 import { Spinner } from '@/components/ui';
 import { useUser } from '@/lib/UserContext';
@@ -71,6 +72,10 @@ interface TieredMatches {
     possible: Match[];
 }
 
+const EXCELLENT_THRESHOLD = 0.38;
+const GOOD_THRESHOLD = 0.44;
+const POSSIBLE_THRESHOLD = 0.48;
+
 export default function FindFacePage() {
     const { eventId } = useParams() as { eventId: string };
     const { user } = useUser();
@@ -112,6 +117,8 @@ export default function FindFacePage() {
     const performSearch = async (imageSource: string | Blob) => {
         setSearchStatus('searching');
         setMode('results');
+        resetSelection();
+        setIsSelectMode(false);
         try {
             let blob: Blob;
             if (typeof imageSource === 'string') {
@@ -140,22 +147,25 @@ export default function FindFacePage() {
             }
             const data = await res.json();
             const matches: Match[] = data.matches || [];
-            setAllPhotos(matches);
 
-            if (matches.length === 0) {
+            // Fix: Filter allPhotos to only include what's in the tiers
+            const filteredMatches = matches.filter(m => m.distance < POSSIBLE_THRESHOLD);
+            setAllPhotos(filteredMatches);
+
+            if (filteredMatches.length === 0) {
                 setSearchStatus('no-matches');
             } else {
                 setSearchStatus('none');
                 // Update eventCreatorId if missing from state but present in matches
-                if (!eventCreatorId && matches[0].eventCreatorId) {
-                    setEventCreatorId(matches[0].eventCreatorId);
+                if (!eventCreatorId && filteredMatches[0].eventCreatorId) {
+                    setEventCreatorId(filteredMatches[0].eventCreatorId);
                 }
             }
 
             setTieredMatches({
-                excellent: matches.filter(m => m.distance < 0.4),
-                good: matches.filter(m => m.distance >= 0.4 && m.distance < 0.5),
-                possible: matches.filter(m => m.distance >= 0.5 && m.distance < 0.6),
+                excellent: filteredMatches.filter(m => m.distance < EXCELLENT_THRESHOLD),
+                good: filteredMatches.filter(m => m.distance >= EXCELLENT_THRESHOLD && m.distance < GOOD_THRESHOLD),
+                possible: filteredMatches.filter(m => m.distance >= GOOD_THRESHOLD && m.distance < POSSIBLE_THRESHOLD),
             });
         } catch (err) {
             console.error(err);
@@ -175,6 +185,11 @@ export default function FindFacePage() {
         if (file) performSearch(file);
     };
 
+    const handleDownloadAll = async () => {
+        const urls = allPhotos.map(p => getPhotoUrl(p.link));
+        await downloadPhotos(urls, `${eventName.replace(/\s+/g, '-').toLowerCase()}-matches.zip`);
+    };
+
     const handleBulkDownload = async () => {
         const urls = allPhotos.filter(p => selectedIds.has(p.id)).map(p => getPhotoUrl(p.link));
         await downloadPhotos(urls, `${eventName.replace(/\s+/g, '-').toLowerCase()}-matches.zip`);
@@ -187,9 +202,9 @@ export default function FindFacePage() {
             const remaining = allPhotos.filter(p => !selectedIds.has(p.id));
             setAllPhotos(remaining);
             setTieredMatches({
-                excellent: remaining.filter(m => m.distance < 0.4),
-                good: remaining.filter(m => m.distance >= 0.4 && m.distance < 0.5),
-                possible: remaining.filter(m => m.distance >= 0.5 && m.distance < 0.6),
+                excellent: remaining.filter(m => m.distance < EXCELLENT_THRESHOLD),
+                good: remaining.filter(m => m.distance >= EXCELLENT_THRESHOLD && m.distance < GOOD_THRESHOLD),
+                possible: remaining.filter(m => m.distance >= GOOD_THRESHOLD && m.distance < POSSIBLE_THRESHOLD),
             });
             resetSelection();
             setIsSelectMode(false);
@@ -236,86 +251,105 @@ export default function FindFacePage() {
     );
 
     return (
-        <PaperBackground coverPhotoUrl={coverPhotoUrl}>
-            <div className={styles.container}>
-                <PageHeader
-                    title={isSelectMode ? 'Select Photos' : (mode === 'results' ? 'My Photos' : 'Find My Photos')}
-                    backHref={mode === 'intro' ? `/event/${eventId}` : undefined}
-                    onBack={mode !== 'intro' ? () => { stopCamera(); setMode('intro'); setAllPhotos([]); setSearchStatus('none'); } : undefined}
-                    actions={headerActions}
-                    scrolled={isScrolled}
-                    className={styles.header}
-                />
-
-                <main className={styles.content}>
-                    {mode === 'results' && allPhotos.length > 0 && (
-                        <div className={styles.resultsContext}>
-                            <p>We found <strong>{allPhotos.length}</strong> photo{allPhotos.length === 1 ? '' : 's'} of you in {eventName}.</p>
-                            <button className={styles.newSearchBtn} onClick={() => setMode('intro')}>
-                                <span className="material-symbols-outlined">refresh</span>
-                                Search Again
-                            </button>
-                        </div>
-                    )}
-                    {mode === 'intro' && (
-                        <FaceIntro
-                            onUploadClick={() => fileInputRef.current?.click()}
-                            onCameraClick={() => { setMode('camera'); setTimeout(() => startCamera().catch(() => setMode('intro')), 100); }}
+        <>
+            <PaperBackground coverPhotoUrl={coverPhotoUrl}>
+                <PageTransition>
+                    <div className={styles.container}>
+                        <PageHeader
+                            title={isSelectMode ? 'Select Photos' : (mode === 'results' ? 'My Photos' : 'Find My Photos')}
+                            backHref={mode === 'intro' ? `/event/${eventId}` : undefined}
+                            onBack={mode !== 'intro' ? () => { stopCamera(); setMode('intro'); setAllPhotos([]); setSearchStatus('none'); resetSelection(); setIsSelectMode(false); } : undefined}
+                            actions={headerActions}
+                            scrolled={isScrolled}
+                            className={styles.header}
                         />
-                    )}
 
-                    {mode === 'camera' && (
-                        <div className={styles.cameraContainer}>
-                            <video ref={videoRef} autoPlay playsInline muted className={styles.video} />
-                            <div className={styles.overlay}><button className={styles.captureBtn} onClick={capturePhoto} /></div>
-                        </div>
-                    )}
+                        <main className={styles.content}>
+                            {mode === 'results' && allPhotos.length > 0 && (
+                                <div className={styles.resultsContext}>
+                                    <p>We found <strong>{allPhotos.length}</strong> photo{allPhotos.length === 1 ? '' : 's'} of you in {eventName}.</p>
+                                    <div className={styles.resultsActions}>
+                                        <button className={styles.newSearchBtn} onClick={() => { setMode('intro'); resetSelection(); setIsSelectMode(false); }}>
+                                            <span className="material-symbols-outlined">refresh</span>
+                                            Search Again
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            {mode === 'intro' && (
+                                <FaceIntro
+                                    onUploadClick={() => fileInputRef.current?.click()}
+                                    onCameraClick={() => { setMode('camera'); setTimeout(() => startCamera().catch(() => setMode('intro')), 100); }}
+                                />
+                            )}
 
-                    {mode === 'results' && allPhotos.length > 0 && (
-                        <div className={styles.resultsContainer}>
-                            <MatchTier title="Excellent Matches" matches={tieredMatches.excellent} selectedIds={selectedIds} isSelectMode={isSelectMode} onPhotoClick={setSelectedPhoto} onPointerDown={handlePointerDown} onPointerEnter={handlePointerEnter} onToggleAll={handleToggleAll} />
-                            <MatchTier title="Good Matches" matches={tieredMatches.good} selectedIds={selectedIds} isSelectMode={isSelectMode} onPhotoClick={setSelectedPhoto} onPointerDown={handlePointerDown} onPointerEnter={handlePointerEnter} onToggleAll={handleToggleAll} />
-                            <MatchTier title="Possible Matches" matches={tieredMatches.possible} selectedIds={selectedIds} isSelectMode={isSelectMode} onPhotoClick={setSelectedPhoto} onPointerDown={handlePointerDown} onPointerEnter={handlePointerEnter} onToggleAll={handleToggleAll} />
-                        </div>
-                    )}
-                </main>
+                            {mode === 'camera' && (
+                                <div className={styles.cameraContainer}>
+                                    <video ref={videoRef} autoPlay playsInline muted className={styles.video} />
+                                    <div className={styles.overlay}><button className={styles.captureBtn} onClick={capturePhoto} /></div>
+                                </div>
+                            )}
 
-                <input type="file" ref={fileInputRef} className={styles.hiddenInput} onChange={handleFileUpload} accept="image/*" />
+                            {mode === 'results' && allPhotos.length > 0 && (
+                                <div className={styles.resultsContainer}>
+                                    <MatchTier title="Excellent Matches" matches={tieredMatches.excellent} selectedIds={selectedIds} isSelectMode={isSelectMode} onPhotoClick={setSelectedPhoto} onPointerDown={handlePointerDown} onPointerEnter={handlePointerEnter} onToggleAll={handleToggleAll} />
+                                    <MatchTier title="Good Matches" matches={tieredMatches.good} selectedIds={selectedIds} isSelectMode={isSelectMode} onPhotoClick={setSelectedPhoto} onPointerDown={handlePointerDown} onPointerEnter={handlePointerEnter} onToggleAll={handleToggleAll} />
+                                    <MatchTier title="Possible Matches" matches={tieredMatches.possible} selectedIds={selectedIds} isSelectMode={isSelectMode} onPhotoClick={setSelectedPhoto} onPointerDown={handlePointerDown} onPointerEnter={handlePointerEnter} onToggleAll={handleToggleAll} />
+                                </div>
+                            )}
+                        </main>
 
-                {searchStatus !== 'none' && (
-                    <StatusModal
-                        type={searchStatus as any}
-                        onClose={() => { setSearchStatus('none'); if (searchStatus !== 'searching' && allPhotos.length === 0) setMode('intro'); }}
-                        onRetry={() => { setSearchStatus('none'); setMode('intro'); setTimeout(() => fileInputRef.current?.click(), 100); }}
-                    />
-                )}
+                        <input type="file" ref={fileInputRef} className={styles.hiddenInput} onChange={handleFileUpload} accept="image/*" />
+                    </div>
+                </PageTransition>
+            </PaperBackground>
 
-                {isSelectMode && (
-                    <BulkActionsBar
-                        count={selectedIds.size}
-                        canDelete={canDeleteSelected}
-                        onDownload={handleBulkDownload}
-                        onDelete={handleBulkDelete}
-                    />
-                )}
-
-                <PhotoModal
-                    isOpen={!!selectedPhoto} photo={selectedPhoto} photos={allPhotos}
-                    currentIndex={selectedPhoto ? allPhotos.findIndex(p => p.id === selectedPhoto.id) : 0}
-                    onClose={() => setSelectedPhoto(null)} onNavigate={(index) => setSelectedPhoto(allPhotos[index])}
-                    onDelete={async (id) => {
-                        await deletePhotos(eventId, [id]);
-                        const remaining = allPhotos.filter(p => p.id !== id);
-                        setAllPhotos(remaining);
-                        setTieredMatches({
-                            excellent: remaining.filter(m => m.distance < 0.4),
-                            good: remaining.filter(m => m.distance >= 0.4 && m.distance < 0.5),
-                            possible: remaining.filter(m => m.distance >= 0.5 && m.distance < 0.6),
-                        });
+            {searchStatus !== 'none' && (
+                <StatusModal
+                    type={searchStatus as any}
+                    onClose={() => {
+                        setSearchStatus('none');
+                        if (searchStatus !== 'searching' && allPhotos.length === 0) {
+                            setMode('intro');
+                            resetSelection();
+                            setIsSelectMode(false);
+                        }
                     }}
-                    canDelete={selectedPhoto ? checkCanDelete(selectedPhoto) : false}
+                    onRetry={() => {
+                        setSearchStatus('none');
+                        setMode('intro');
+                        resetSelection();
+                        setIsSelectMode(false);
+                        setTimeout(() => fileInputRef.current?.click(), 100);
+                    }}
                 />
-            </div>
-        </PaperBackground>
+            )}
+
+            {isSelectMode && (
+                <BulkActionsBar
+                    count={selectedIds.size}
+                    canDelete={canDeleteSelected}
+                    onDownload={handleBulkDownload}
+                    onDelete={handleBulkDelete}
+                />
+            )}
+
+            <PhotoModal
+                isOpen={!!selectedPhoto} photo={selectedPhoto} photos={allPhotos}
+                currentIndex={selectedPhoto ? allPhotos.findIndex(p => p.id === selectedPhoto.id) : 0}
+                onClose={() => setSelectedPhoto(null)} onNavigate={(index) => setSelectedPhoto(allPhotos[index])}
+                onDelete={async (id) => {
+                    await deletePhotos(eventId, [id]);
+                    const remaining = allPhotos.filter(p => p.id !== id); // Fix: p.id !== id instead of !selectedIds.has(p.id) for single delete
+                    setAllPhotos(remaining);
+                    setTieredMatches({
+                        excellent: remaining.filter(m => m.distance < EXCELLENT_THRESHOLD),
+                        good: remaining.filter(m => m.distance >= EXCELLENT_THRESHOLD && m.distance < GOOD_THRESHOLD),
+                        possible: remaining.filter(m => m.distance >= GOOD_THRESHOLD && m.distance < POSSIBLE_THRESHOLD),
+                    });
+                }}
+                canDelete={selectedPhoto ? checkCanDelete(selectedPhoto) : false}
+            />
+        </>
     );
 }

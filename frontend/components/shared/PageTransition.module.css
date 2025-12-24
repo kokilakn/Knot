@@ -1,0 +1,29 @@
+/* ==========================================================================
+   Page Transition Component Styles
+   Provides smooth, calming entrance animations for page content
+   ========================================================================== */
+
+.pageTransition {
+    animation: pageEnter var(--duration-page, 600ms) var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1)) both;
+}
+
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .pageTransition {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}

@@ -2,6 +2,7 @@
 
 import PaperBackground from '@/components/PaperBackground';
 import { Button } from '@/components/ui';
+import { PageTransition } from '@/components/shared/PageTransition';
 import styles from './create-event.module.css';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
@@ -156,132 +157,134 @@ export default function CreateEventPage() {
 
     return (
         <PaperBackground>
-            <div className={styles.container}>
-                {/* Header */}
-                <header className={styles.header}>
-                    <div className={styles.headerLeft}>
-                        <Link href="/dashboard" className={styles.iconBtn} aria-label="Back">
-                            <IconBack />
-                        </Link>
-                        <span className={styles.headerTitle}>Knot</span>
-                    </div>
-                    <button className={styles.iconBtn} aria-label="More options" style={{ opacity: 0, cursor: 'default' }}>
-                        <IconMore />
-                    </button>
-                </header>
+            <PageTransition>
+                <div className={styles.container}>
+                    {/* Header */}
+                    <header className={styles.header}>
+                        <div className={styles.headerLeft}>
+                            <Link href="/dashboard" className={styles.iconBtn} aria-label="Back">
+                                <IconBack />
+                            </Link>
+                            <span className={styles.headerTitle}>Knot</span>
+                        </div>
+                        <button className={styles.iconBtn} aria-label="More options" style={{ opacity: 0, cursor: 'default' }}>
+                            <IconMore />
+                        </button>
+                    </header>
 
-                {/* Main Content */}
-                <main className={styles.main}>
-                    <div className={`${styles.titleSection} animate-fade-in`}>
-                        <h1 className={styles.pageTitle}>New<br />Event</h1>
-                        <p className={styles.pageSubtitle}>Start a new chapter in your story.</p>
-                    </div>
-
-                    <form className={styles.form} onSubmit={handleSubmit}>
-                        {error && <div className={styles.error}>{error}</div>}
-
-                        {/* Title Input - Floating Label */}
-                        <div className={`${styles.fieldGroup} animate-fade-in animate-delay-1`}>
-                            <input
-                                id="event-name"
-                                type="text"
-                                className={styles.input}
-                                placeholder=" "
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                            />
-                            <label className={styles.label} htmlFor="event-name">Title</label>
+                    {/* Main Content */}
+                    <main className={styles.main}>
+                        <div className={`${styles.titleSection} animate-fade-in`}>
+                            <h1 className={styles.pageTitle}>New<br />Event</h1>
+                            <p className={styles.pageSubtitle}>Start a new chapter in your story.</p>
                         </div>
 
-                        <div className={`${styles.fieldGroup} animate-fade-in animate-delay-2`}>
-                            <div
-                                className={styles.inputWrapper}
-                                onClick={openDatePicker}
-                                style={{ cursor: 'pointer' }}
-                                data-has-value={!!dateValue}
-                            >
+                        <form className={styles.form} onSubmit={handleSubmit}>
+                            {error && <div className={styles.error}>{error}</div>}
+
+                            {/* Title Input - Floating Label */}
+                            <div className={`${styles.fieldGroup} animate-fade-in animate-delay-1`}>
                                 <input
-                                    id="event-date"
-                                    type="date"
-                                    className={styles.inputDate}
-                                    style={{ color: (dateValue || isDateFocused) ? 'var(--text-primary)' : 'transparent' }}
-                                    value={dateValue}
-                                    onChange={(e) => setDateValue(e.target.value)}
-                                    onFocus={() => setIsDateFocused(true)}
-                                    onBlur={() => setIsDateFocused(false)}
-                                    required
+                                    id="event-name"
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder=" "
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
                                 />
-                                <div className={styles.calendarIcon}>
-                                    <IconCalendar />
+                                <label className={styles.label} htmlFor="event-name">Title</label>
+                            </div>
+
+                            <div className={`${styles.fieldGroup} animate-fade-in animate-delay-2`}>
+                                <div
+                                    className={styles.inputWrapper}
+                                    onClick={openDatePicker}
+                                    style={{ cursor: 'pointer' }}
+                                    data-has-value={!!dateValue}
+                                >
+                                    <input
+                                        id="event-date"
+                                        type="date"
+                                        className={styles.inputDate}
+                                        style={{ color: (dateValue || isDateFocused) ? 'var(--text-primary)' : 'transparent' }}
+                                        value={dateValue}
+                                        onChange={(e) => setDateValue(e.target.value)}
+                                        onFocus={() => setIsDateFocused(true)}
+                                        onBlur={() => setIsDateFocused(false)}
+                                        required
+                                    />
+                                    <div className={styles.calendarIcon}>
+                                        <IconCalendar />
+                                    </div>
+                                </div>
+                                <label className={styles.label} htmlFor="event-date">Date</label>
+                            </div>
+
+                            {/* Notes Input - Textarea with Label (Simulated floating or static) */}
+                            <div className={`${styles.fieldGroup} animate-fade-in animate-delay-3`}>
+                                <textarea
+                                    id="event-desc"
+                                    className={styles.textarea}
+                                    placeholder=" "
+                                    rows={4}
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                ></textarea>
+                                <label className={styles.label} htmlFor="event-desc">Notes <span style={{ textTransform: 'none', fontStyle: 'italic', opacity: 0.7 }}>(Optional)</span></label>
+                            </div>
+
+                            {/* Cover Photo Selection */}
+                            <div className={`${styles.fieldGroup} animate-fade-in animate-delay-4`}>
+                                <label className={styles.labelFixed} style={{ position: 'relative', marginBottom: '8px', display: 'block', top: 'auto', left: 'auto' }}>Cover Photo</label>
+                                <div className={styles.photoRow}>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        style={{ display: 'none' }}
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                    />
+
+                                    {!photo && (
+                                        <button type="button" className={styles.addBtn} onClick={handleAddPhotoClick}>
+                                            <div className={styles.addBtnIcon}><IconAddPhoto /></div>
+                                            <span className={styles.addBtnText}>Add</span>
+                                        </button>
+                                    )}
+
+                                    {photo && (
+                                        <div className={styles.photoOption}>
+                                            <img
+                                                src={photo}
+                                                alt="Cover preview"
+                                                className={styles.photoImg}
+                                            />
+                                            <div
+                                                className={styles.removeOverlay}
+                                                onClick={handleRemovePhoto}
+                                                title="Remove photo"
+                                                role="button"
+                                            >
+                                                <IconRemove />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                            <label className={styles.label} htmlFor="event-date">Date</label>
-                        </div>
 
-                        {/* Notes Input - Textarea with Label (Simulated floating or static) */}
-                        <div className={`${styles.fieldGroup} animate-fade-in animate-delay-3`}>
-                            <textarea
-                                id="event-desc"
-                                className={styles.textarea}
-                                placeholder=" "
-                                rows={4}
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
-                            ></textarea>
-                            <label className={styles.label} htmlFor="event-desc">Notes <span style={{ textTransform: 'none', fontStyle: 'italic', opacity: 0.7 }}>(Optional)</span></label>
-                        </div>
-
-                        {/* Cover Photo Selection */}
-                        <div className={`${styles.fieldGroup} animate-fade-in animate-delay-4`}>
-                            <label className={styles.labelFixed} style={{ position: 'relative', marginBottom: '8px', display: 'block', top: 'auto', left: 'auto' }}>Cover Photo</label>
-                            <div className={styles.photoRow}>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    style={{ display: 'none' }}
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                />
-
-                                {!photo && (
-                                    <button type="button" className={styles.addBtn} onClick={handleAddPhotoClick}>
-                                        <div className={styles.addBtnIcon}><IconAddPhoto /></div>
-                                        <span className={styles.addBtnText}>Add</span>
-                                    </button>
-                                )}
-
-                                {photo && (
-                                    <div className={styles.photoOption}>
-                                        <img
-                                            src={photo}
-                                            alt="Cover preview"
-                                            className={styles.photoImg}
-                                        />
-                                        <div
-                                            className={styles.removeOverlay}
-                                            onClick={handleRemovePhoto}
-                                            title="Remove photo"
-                                            role="button"
-                                        >
-                                            <IconRemove />
-                                        </div>
-                                    </div>
-                                )}
+                            {/* Submit Button */}
+                            <div className={`${styles.footer} animate-fade-in animate-delay-4`}>
+                                <Button type="submit" variant="primary" color="logo" size="lg" fullWidth disabled={loading}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {loading ? 'Creating...' : 'Create Event'} {!loading && <IconArrowRight />}
+                                    </span>
+                                </Button>
                             </div>
-                        </div>
 
-                        {/* Submit Button */}
-                        <div className={`${styles.footer} animate-fade-in animate-delay-4`}>
-                            <Button type="submit" variant="primary" color="logo" size="lg" fullWidth disabled={loading}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {loading ? 'Creating...' : 'Create Event'} {!loading && <IconArrowRight />}
-                                </span>
-                            </Button>
-                        </div>
-
-                    </form>
-                </main>
-            </div>
+                        </form>
+                    </main>
+                </div>
+            </PageTransition>
         </PaperBackground>
     );
 }

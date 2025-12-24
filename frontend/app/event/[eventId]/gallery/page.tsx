@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styles from './gallery.module.css';
 import PaperBackground from '@/components/PaperBackground';
 import PhotoModal from '@/components/shared/PhotoModal';
+import { PageTransition } from '@/components/shared/PageTransition';
 import { useUser } from '@/lib/UserContext';
 import { useParams } from 'next/navigation';
 import { getPhotoUrl } from '@/hooks/usePhotoUrl';
@@ -105,45 +106,47 @@ export default function GalleryPage() {
 
     return (
         <PaperBackground coverPhotoUrl={coverPhotoUrl}>
-            <div className={styles.container}>
-                <PageHeader
-                    title={isSelectMode ? 'Select Photos' : `${eventName} – Gallery`}
-                    backHref={`/event/${eventId}`}
-                    actions={headerActions}
-                    className={styles.header}
-                />
-
-                <GalleryGrid
-                    loading={loading}
-                    photos={photoDetails}
-                    selectedIds={selectedIds}
-                    isSelectMode={isSelectMode}
-                    eventId={eventId}
-                    onPhotoClick={setSelectedPhoto}
-                    onPointerDown={handlePointerDown}
-                    onPointerEnter={handlePointerEnter}
-                />
-
-                {isSelectMode && (
-                    <BulkActionsBar
-                        count={selectedIds.size}
-                        canDelete={canDeleteSelected}
-                        onDownload={handleBulkDownload}
-                        onDelete={handleBulkDelete}
+            <PageTransition>
+                <div className={styles.container}>
+                    <PageHeader
+                        title={isSelectMode ? 'Select Photos' : `${eventName} – Gallery`}
+                        backHref={`/event/${eventId}`}
+                        actions={headerActions}
+                        className={styles.header}
                     />
-                )}
 
-                <PhotoModal
-                    isOpen={!!selectedPhoto}
-                    photo={selectedPhoto}
-                    photos={photoDetails}
-                    currentIndex={selectedPhoto ? photoDetails.findIndex(p => p.id === selectedPhoto.id) : 0}
-                    onClose={() => setSelectedPhoto(null)}
-                    onNavigate={(index) => setSelectedPhoto(photoDetails[index])}
-                    onDelete={handleSingleDelete}
-                    canDelete={selectedPhoto ? checkCanDelete(selectedPhoto) : false}
-                />
-            </div>
+                    <GalleryGrid
+                        loading={loading}
+                        photos={photoDetails}
+                        selectedIds={selectedIds}
+                        isSelectMode={isSelectMode}
+                        eventId={eventId}
+                        onPhotoClick={setSelectedPhoto}
+                        onPointerDown={handlePointerDown}
+                        onPointerEnter={handlePointerEnter}
+                    />
+
+                    {isSelectMode && (
+                        <BulkActionsBar
+                            count={selectedIds.size}
+                            canDelete={canDeleteSelected}
+                            onDownload={handleBulkDownload}
+                            onDelete={handleBulkDelete}
+                        />
+                    )}
+
+                    <PhotoModal
+                        isOpen={!!selectedPhoto}
+                        photo={selectedPhoto}
+                        photos={photoDetails}
+                        currentIndex={selectedPhoto ? photoDetails.findIndex(p => p.id === selectedPhoto.id) : 0}
+                        onClose={() => setSelectedPhoto(null)}
+                        onNavigate={(index) => setSelectedPhoto(photoDetails[index])}
+                        onDelete={handleSingleDelete}
+                        canDelete={selectedPhoto ? checkCanDelete(selectedPhoto) : false}
+                    />
+                </div>
+            </PageTransition>
         </PaperBackground>
     );
 }

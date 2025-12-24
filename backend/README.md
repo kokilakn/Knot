@@ -1,93 +1,100 @@
-# Knot Backend
+# Knot Backend – Face Recognition Service
 
-Express.js API server for the Knot photo organization application.
+A specialized Express.js service dedicated to image processing and face recognition using `face-api.js`.
+
+## Overview
+
+This service acts as the "brain" of Knot. It handles:
+- **Face Detection**: Identifying faces in uploaded images (HEIC/JPEG/PNG).
+- **Embedding Generation**: Creating high-dimensional vectors (descriptors) for detected faces.
+- **Face Matching**: Comparing a query selfie against a database of embeddings to find matches.
+- **HEIC Conversion**: Converting high-efficiency images to JPEG for processing and browser compatibility.
+
+## Tech Stack
+
+- **Node.js**: ES Modules (type: "module")
+- **Express**: Web framework
+- **face-api.js**: TensorFlow.js-based face recognition library
+- **canvas**: Node.js implementation of the Canvas API for server-side image processing
+- **heic-convert**: Logic for HEIC -> JPEG transformation
 
 ## Setup
 
-1. Install dependencies:
+1. **Install Dependencies**:
    ```bash
    npm install
    ```
-
-2. Configure environment variables:
+2. **Setup Models**:
+   Ensure the `models/` directory contains the necessary pre-trained weights:
+   - `ssd_mobilenet_v1_model-weights_manifest.json`
+   - `face_landmark_68_model-weights_manifest.json`
+   - `face_recognition_model-weights_manifest.json`
+3. **Configure Environment**:
    ```bash
    cp .env.example .env
    ```
-   Then edit `.env` with your settings.
-
+   *Required variables*: `PORT`, `FRONTEND_URL`, `DATABASE_URL`.
+   
+   **Database Setup**:
+   The system is modular and supports:
+   - **Local PostgreSQL**: Use `postgresql://user:password@localhost:5432/db`
+   - **Cloud Providers (Neon, Supabase, Vercel)**: The client handles SSL automatically if `neon.tech` or `supabase.co` is in the URL, or if `?sslmode=require` is appended.
+   
+   **Initialize Database**:
+   After setting your `DATABASE_URL`, run the initialization script to create tables:
+   ```bash
+   node src/scripts/init-db.js
+   ```
 ## Development
 
 ```bash
 npm run dev
 ```
-
-The server will start on `http://localhost:5000` and watch for file changes.
-
-## Production
-
-```bash
-npm start
-```
+Starts the server with `--watch` mode on `http://localhost:5000`.
 
 ## API Endpoints
 
-### Health Check
-- `GET /api/health` - Returns server health status
+### 1. Face Matching
+`POST /api/faces/match`
+Compares a query image (base64) against stored vectors for a specific event.
 
-Response:
+**Request Body**:
 ```json
 {
-  "status": "ok",
-  "timestamp": "2024-12-17T10:30:00Z",
-  "uptime": 3600
+  "image": "data:image/jpeg;base64,...",
+  "eventId": "uuid-or-code"
 }
 ```
 
+### 2. Face Processing
+`POST /api/faces/process`
+Processes an uploaded image to detect faces and store embeddings.
+
+**Request Body**:
+```json
+{
+  "link": "/uploads/filename.jpg",
+  "eventId": "uuid"
+}
+```
+
+### 3. Health Check
+`GET /api/health`
+Returns system status, uptime, and timestamp.
+
 ## Project Structure
 
-- **src/app.js** - Express app initialization with middleware and routes
-- **src/server.js** - Server startup and lifecycle management
-- **src/routes/** - API endpoint definitions
-  - `health.js` - Health check endpoint
-- **src/controllers/** - Business logic (to be implemented)
-- **src/services/** - External service integrations (to be implemented)
+- `src/app.js`: Express configuration and middleware (CORS, body-parser).
+- `src/routes/face.js`: Core logic for `face-api.js` integration and matching algorithms.
+- `src/utils/image.js`: Image conversion utilities (HEIC support).
+- `models/`: Weights and manifests for AI models.
 
-## Architecture Notes
+## Logic Details
 
-- Uses ES modules for modern JavaScript
-- CORS enabled for frontend communication
-- Environment-based configuration
-- Graceful shutdown handling
+- **Algorithm**: Euclidean Distance is used to compare descriptors.
+- **Matched Threshold**: Currently set to `< 0.48` for unique image matches and `< 0.55` for raw matches.
+- **Performance**: Uses `SSD Mobilenet v1` for robust face detection. Small background faces are filtered out (min size: 80px).
 
-## Future Development
+---
+*Note: This service is intended for internal use and is typically proxied by the frontend.*
 
-### Controllers
-- Photo management (upload, retrieval, deletion)
-- Face detection and tagging
-- Search and filtering
-
-### Services
-- Face recognition integration (AWS Rekognition, Google Vision, etc.)
-- Photo storage and processing
-- Database operations
-- Email notifications
-
-### Middleware
-- Authentication (JWT, OAuth)
-- Rate limiting
-- Input validation
-- Logging and monitoring
-
-## Environment Variables
-
-See `.env.example` for all available configuration options.
-
-## CORS Configuration
-
-Currently allows requests from `http://localhost:3000` (frontend).
-For production, update `FRONTEND_URL` in `.env`.
-
-## Error Handling
-
-All errors are caught and returned as JSON responses with appropriate status codes.
-Development environment includes full error stack traces.

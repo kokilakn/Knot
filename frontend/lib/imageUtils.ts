@@ -3,7 +3,9 @@
  * Centralized image processing functions for compression and manipulation.
  */
 
-import { IMAGE_MAX_WIDTH, IMAGE_QUALITY } from './constants';
+import { IMAGE_MAX_WIDTH, IMAGE_QUALITY, STORAGE_MAX_WIDTH, STORAGE_QUALITY } from './constants';
+
+const isServer = typeof window === 'undefined';
 
 /**
  * Compress a base64 data URL image to a smaller size.
@@ -104,6 +106,88 @@ export function blobToBase64(blob: Blob): Promise<string> {
         reader.onloadend = () => resolve(reader.result as string);
         reader.onerror = reject;
         reader.readAsDataURL(blob);
+    });
+}
+
+/**
+ * Optimizes a photo for upload by resizing and compressing it in the browser.
+ * This saves bandwidth and storage. Handles HEIC conversion.
+ */
+export async function optimizeForUpload(file: File | Blob): Promise<Blob> {
+    if (isServer) return file;
+    let currentBlob = file;
+
+    // 1. Handle HEIC conversion if it's a File and has HEIC extension
+    if (file instanceof File && isHeic(file.name)) {
+        try {
+            console.log('Converting HEIC to JPEG in browser...');
+            // Dynamic import to avoid SSR errors
+            const { default: heic2any } = await import('heic2any');
+            const converted = await heic2any({
+                blob: file,
+                toType: 'image/jpeg',
+                quality: STORAGE_QUALITY
+            });
+            currentBlob = Array.isArray(converted) ? converted[0] : converted;
+        } catch (error) {
+            console.error('HEIC conversion failed in browser, using original:', error);
+        }
+    }
+
+    // 2. Resize and Compress using Canvas
+    return new Promise((resolve) => {
+        const img = new window.Image();
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            img.src = e.target?.result as string;
+        };
+
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > STORAGE_MAX_WIDTH || height > STORAGE_MAX_WIDTH) {
+                    if (width > height) {
+                        height = (height * STORAGE_MAX_WIDTH) / width;
+                        width = STORAGE_MAX_WIDTH;
+                    } else {
+                        width = (width * STORAGE_MAX_WIDTH) / height;
+                        height = STORAGE_MAX_WIDTH;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    resolve(currentBlob); // Fallback
+                    return;
+                }
+
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) resolve(blob);
+                        else resolve(currentBlob);
+                    },
+                    'image/jpeg',
+                    STORAGE_QUALITY
+                );
+            } catch (err) {
+                console.error('Canvas optimization failed:', err);
+                resolve(currentBlob);
+            }
+        };
+
+        img.onerror = () => {
+            console.error('Failed to load image for optimization');
+            resolve(currentBlob);
+        };
+
+        reader.readAsDataURL(currentBlob);
     });
 }
 

@@ -64,15 +64,14 @@
     background: var(--bg-surface);
     border: 2px solid var(--border-default);
     border-radius: var(--radius-lg);
-    padding: var(--space-2xl);
+    padding-bottom: var(--space-2xl);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--space-lg);
+    gap: var(--space-sm);
     cursor: pointer;
     transition: all var(--transition-fast);
-    aspect-ratio: 1;
 }
 
 /* Upload from Gallery - Solid Dark Blue */

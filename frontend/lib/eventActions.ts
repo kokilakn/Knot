@@ -14,11 +14,28 @@ export async function fetchEventPhotos(eventId: string) {
     return res.json();
 }
 
+import { optimizeForUpload } from './imageUtils';
+
 export async function uploadPhotos(eventId: string, files: File[] | Blob[]) {
     const formData = new FormData();
-    files.forEach((file, index) => {
-        const name = (file as File).name || `photo_${Date.now()}_${index}.jpg`;
-        formData.append('photos', file, name);
+
+    // Optimize each file in the browser before appending to FormData
+    const optimizedFiles = await Promise.all(
+        files.map(file => optimizeForUpload(file))
+    );
+
+    optimizedFiles.forEach((blob, index) => {
+        const originalFile = files[index] as File;
+        let name = originalFile.name || `photo_${Date.now()}_${index}.jpg`;
+
+        // Ensure extension is .jpg as optimizeForUpload returns JPEG
+        if (name.toLowerCase().endsWith('.heic') || name.toLowerCase().endsWith('.heif') || name.toLowerCase().endsWith('.png')) {
+            name = name.substring(0, name.lastIndexOf('.')) + '.jpg';
+        } else if (!name.toLowerCase().endsWith('.jpg') && !name.toLowerCase().endsWith('.jpeg')) {
+            name = name + '.jpg';
+        }
+
+        formData.append('photos', blob, name);
     });
 
     const res = await fetch(`/api/events/${eventId}/photos`, {

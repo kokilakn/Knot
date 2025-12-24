@@ -4,8 +4,12 @@
  */
 
 // Image compression settings for face embedding generation
-export const IMAGE_MAX_WIDTH = 520; // pixels (average of user-specified 500-550px)
-export const IMAGE_QUALITY = 0.7; // JPEG quality (0.0 - 1.0)
+export const IMAGE_MAX_WIDTH = 520;
+export const IMAGE_QUALITY = 0.7;
+
+// Image compression settings for storage (client-side before upload)
+export const STORAGE_MAX_WIDTH = 2048;
+export const STORAGE_QUALITY = 0.8;
 
 // Face matching tier thresholds (distance values)
 // Lower distance = better match. Distance maps to percentage as: (1 - distance) * 100

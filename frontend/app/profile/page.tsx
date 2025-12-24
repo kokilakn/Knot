@@ -1,6 +1,7 @@
 'use client';
 
 import PaperBackground from '@/components/PaperBackground';
+import { PageTransition } from '@/components/shared/PageTransition';
 import styles from './profile.module.css';
 import { Spinner } from '@/components/ui';
 import Link from 'next/link';
@@ -96,54 +97,56 @@ export default function ProfilePage() {
 
     return (
         <PaperBackground>
-            <div className={styles.container}>
-                <header className={styles.header}>
-                    <div className={styles.headerLeft}>
-                        <Link href="/dashboard" className={styles.iconBtn} aria-label="Back">
-                            <IconBack />
-                        </Link>
-                        <span className={styles.logo}>Knot</span>
-                    </div>
-                </header>
-
-                <main>
-                    <section className={styles.profileHero}>
-                        <div className={styles.avatarLarge}>
-                            <img
-                                src={avatarUrl}
-                                alt="User avatar"
-                            />
+            <PageTransition>
+                <div className={styles.container}>
+                    <header className={styles.header}>
+                        <div className={styles.headerLeft}>
+                            <Link href="/dashboard" className={styles.iconBtn} aria-label="Back">
+                                <IconBack />
+                            </Link>
+                            <span className={styles.logo}>Knot</span>
                         </div>
-                        <h1 className={styles.userName}>{user.name}</h1>
-                        <p className={styles.userEmail}>{user.email}</p>
-                    </section>
+                    </header>
 
-                    <div className={styles.section}>
-                        <h2 className={styles.sectionTitle}>Security</h2>
-                        <Link href="/profile/change-password" className={styles.menuItem}>
-                            <div className={styles.menuItemContent}>
-                                <div className={styles.menuItemIcon}><IconLock /></div>
-                                <span className={styles.menuItemText}>Update Password</span>
+                    <main>
+                        <section className={`${styles.profileHero} animate-fade-in animate-delay-1`}>
+                            <div className={styles.avatarLarge}>
+                                <img
+                                    src={avatarUrl}
+                                    alt="User avatar"
+                                />
                             </div>
-                            <IconChevronRight />
-                        </Link>
-                    </div>
+                            <h1 className={styles.userName}>{user.name}</h1>
+                            <p className={styles.userEmail}>{user.email}</p>
+                        </section>
 
-                    <div className={styles.section}>
-                        <h2 className={styles.sectionTitle}>Account</h2>
-                        <button
-                            className={`${styles.menuItem} ${styles.logoutBtn}`}
-                            onClick={handleLogout}
-                        >
-                            <div className={styles.menuItemContent}>
-                                <div className={styles.menuItemIcon}><IconLogout /></div>
-                                <span className={styles.menuItemText}>Logout</span>
-                            </div>
-                            <IconChevronRight />
-                        </button>
-                    </div>
-                </main>
-            </div>
+                        <div className={`${styles.section} animate-fade-in animate-delay-2`}>
+                            <h2 className={styles.sectionTitle}>Security</h2>
+                            <Link href="/profile/change-password" className={styles.menuItem}>
+                                <div className={styles.menuItemContent}>
+                                    <div className={styles.menuItemIcon}><IconLock /></div>
+                                    <span className={styles.menuItemText}>Update Password</span>
+                                </div>
+                                <IconChevronRight />
+                            </Link>
+                        </div>
+
+                        <div className={`${styles.section} animate-fade-in animate-delay-3`}>
+                            <h2 className={styles.sectionTitle}>Account</h2>
+                            <button
+                                className={`${styles.menuItem} ${styles.logoutBtn}`}
+                                onClick={handleLogout}
+                            >
+                                <div className={styles.menuItemContent}>
+                                    <div className={styles.menuItemIcon}><IconLogout /></div>
+                                    <span className={styles.menuItemText}>Logout</span>
+                                </div>
+                                <IconChevronRight />
+                            </button>
+                        </div>
+                    </main>
+                </div>
+            </PageTransition>
         </PaperBackground>
     );
 }

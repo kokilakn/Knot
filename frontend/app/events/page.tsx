@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import PaperBackground from '@/components/PaperBackground';
 import { useUser } from '@/lib/UserContext';
 import { Spinner } from '@/components/ui';
+import { PageTransition } from '@/components/shared/PageTransition';
 import { getPhotoUrl } from '@/hooks/usePhotoUrl';
 import styles from './events.module.css';
 
@@ -84,66 +85,73 @@ export default function EventsPage() {
 
     return (
         <PaperBackground>
-            <div className={styles.container}>
-                <header className={styles.header}>
-                    <div className={styles.headerLeft}>
-                        <Link href="/dashboard" className={styles.iconBtn} aria-label="Back to Dashboard">
-                            <IconBack />
-                        </Link>
-                        <span className={styles.logo}>Knot</span>
-                    </div>
-                    <Link href="/create-event" className={styles.createBtn}>
-                        <IconAdd />
-                        <span>Create Event</span>
-                    </Link>
-                </header>
-
-                <section className={styles.titleSection}>
-                    <h1 className={styles.pageTitle}>My Events</h1>
-                    <p className={styles.pageSubtitle}>Memories you've collected</p>
-                </section>
-
-                <main className={styles.grid}>
-                    {loading && (
-                        <div style={{ textAlign: 'center', color: 'var(--text-subtle)', gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem' }}>
-                            <Spinner size="lg" color="accent" />
-                            <p>Loading events...</p>
-                        </div>
-                    )}
-
-                    {error && (
-                        <p style={{ textAlign: 'center', color: 'var(--color-error)', gridColumn: '1 / -1' }}>
-                            {error}
-                        </p>
-                    )}
-
-                    {!loading && !error && events.length === 0 && (
-                        <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '2rem' }}>
-                            <p style={{ color: 'var(--text-subtle)', marginBottom: '1rem' }}>
-                                No events yet
-                            </p>
-                            <Link href="/create-event" style={{ color: 'var(--color-primary-dark)' }}>
-                                Create your first event
+            <PageTransition>
+                <div className={styles.container}>
+                    <header className={styles.header}>
+                        <div className={styles.headerLeft}>
+                            <Link href="/dashboard" className={styles.iconBtn} aria-label="Back to Dashboard">
+                                <IconBack />
                             </Link>
+                            <span className={styles.logo}>Knot</span>
                         </div>
-                    )}
-
-                    {events.map((event) => (
-                        <Link href={`/event/${event.code}`} key={event.eventId} className={styles.card}>
-                            <div
-                                className={styles.cardBackground}
-                                style={{ backgroundImage: `url('${getPhotoUrl(event.coverPageUrl || defaultCover)}')` }}
-                                aria-hidden="true"
-                            />
-                            <div className={styles.cardOverlay} />
-                            <div className={styles.cardContent}>
-                                <span className={styles.eventDate}>{formatDate(event.eventDate)}</span>
-                                <h2 className={styles.eventName}>{event.name}</h2>
-                            </div>
+                        <Link href="/create-event" className={styles.createBtn}>
+                            <IconAdd />
+                            <span>Create Event</span>
                         </Link>
-                    ))}
-                </main>
-            </div>
+                    </header>
+
+                    <section className={`${styles.titleSection} animate-fade-in animate-delay-1`}>
+                        <h1 className={styles.pageTitle}>My Events</h1>
+                        <p className={styles.pageSubtitle}>Memories you've collected</p>
+                    </section>
+
+                    <main className={styles.grid}>
+                        {loading && (
+                            <div style={{ textAlign: 'center', color: 'var(--text-subtle)', gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem' }}>
+                                <Spinner size="lg" color="accent" />
+                                <p>Loading events...</p>
+                            </div>
+                        )}
+
+                        {error && (
+                            <p style={{ textAlign: 'center', color: 'var(--color-error)', gridColumn: '1 / -1' }}>
+                                {error}
+                            </p>
+                        )}
+
+                        {!loading && !error && events.length === 0 && (
+                            <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '2rem' }}>
+                                <p style={{ color: 'var(--text-subtle)', marginBottom: '1rem' }}>
+                                    No events yet
+                                </p>
+                                <Link href="/create-event" style={{ color: 'var(--color-primary-dark)' }}>
+                                    Create your first event
+                                </Link>
+                            </div>
+                        )}
+
+                        {events.map((event, index) => (
+                            <Link
+                                href={`/event/${event.code}`}
+                                key={event.eventId}
+                                className={`${styles.card} animate-fade-in`}
+                                style={{ animationDelay: `${100 + index * 50}ms` }}
+                            >
+                                <div
+                                    className={styles.cardBackground}
+                                    style={{ backgroundImage: `url('${getPhotoUrl(event.coverPageUrl || defaultCover)}')` }}
+                                    aria-hidden="true"
+                                />
+                                <div className={styles.cardOverlay} />
+                                <div className={styles.cardContent}>
+                                    <span className={styles.eventDate}>{formatDate(event.eventDate)}</span>
+                                    <h2 className={styles.eventName}>{event.name}</h2>
+                                </div>
+                            </Link>
+                        ))}
+                    </main>
+                </div>
+            </PageTransition>
         </PaperBackground>
     );
 }

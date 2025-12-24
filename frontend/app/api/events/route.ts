@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { events, eventParticipants } from "@/db/schema";
 import { eq, or } from "drizzle-orm";
 import { getSession, generateEventCode } from "@/lib/session";
-import path from "path";
+import { storage } from "@/lib/storage";
 
 // GET: Fetch events for current user (created by or participating in)
 export async function GET() {
@@ -118,32 +118,15 @@ export async function POST(request: NextRequest) {
         if (coverFile) {
             try {
                 const buffer = Buffer.from(await coverFile.arrayBuffer());
-                // Use code as filename, preserve extension
+                // Use code as filename prefix, preserve extension
                 const ext = coverFile.name.split('.').pop() || 'jpg';
-                const filename = `${code}.${ext}`;
-                const uploadDir = path.join(process.cwd(), "public", "uploads", "coverphotos");
+                const filename = `coverphotos/${code}.${ext}`;
 
-                const { mkdir, writeFile } = await import("fs/promises");
-                await mkdir(uploadDir, { recursive: true });
-
-                const filePath = path.join(uploadDir, filename);
-                await writeFile(filePath, buffer);
-
-                coverPageUrl = `/uploads/coverphotos/${filename}`;
+                // Upload via storage service
+                coverPageUrl = await storage.upload(buffer, filename, coverFile.type);
             } catch (err) {
-                console.error("Error saving cover photo:", err);
-                // Continue without cover photo if save fails? Or fail?
-                // Let's log it but continue, maybe set coverPageUrl to null
+                console.error("Error saving cover photo to R2:", err);
             }
-        }
-
-        // Create folder for photo storage for this event
-        try {
-            const { mkdir } = await import("fs/promises");
-            const eventPhotosDir = path.join(process.cwd(), "public", "uploads", "events", code);
-            await mkdir(eventPhotosDir, { recursive: true });
-        } catch (err) {
-            console.error("Error creating event photo dir:", err);
         }
 
         // Create the event

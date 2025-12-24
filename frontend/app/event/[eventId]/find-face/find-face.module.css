@@ -1,6 +1,7 @@
 .container {
     min-height: 100vh;
     padding: var(--space-lg);
+    padding-bottom: 100px;
     max-width: 800px;
     margin: 0 auto;
     display: flex;
@@ -730,8 +731,8 @@
 /* Results Context */
 .resultsContext {
     width: 100%;
-    background: color-mix(in srgb, var(--color-accent), transparent 95%);
-    border: 1px solid color-mix(in srgb, var(--color-accent), transparent 80%);
+    background: var(--color-paper);
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-lg);
     padding: var(--space-md) var(--space-lg);
     display: flex;
@@ -739,6 +740,10 @@
     align-items: center;
     gap: var(--space-md);
     margin-bottom: var(--space-md);
+    position: sticky;
+    top: 70px;
+    z-index: 10;
+    box-shadow: var(--shadow-sm);
 }
 
 .resultsContext p {
@@ -774,18 +779,55 @@
     background: white;
 }
 
-.newSearchBtn span {
+.newSearchBtn span,
+.downloadAllBtn span {
     font-size: 1.125rem;
+}
+
+.resultsActions {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+}
+
+.downloadAllBtn {
+    background: var(--color-accent);
+    color: var(--color-paper);
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition-fast);
+}
+
+.downloadAllBtn:hover {
+    background: var(--color-accent-active);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 @media (max-width: 480px) {
     .resultsContext {
         flex-direction: column;
-        align-items: flex-start;
-        gap: var(--space-sm);
+        align-items: center;
+        gap: var(--space-md);
+        position: static;
+        text-align: center;
     }
 
-    .newSearchBtn {
+    .resultsActions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .newSearchBtn,
+    .downloadAllBtn {
         width: 100%;
         justify-content: center;
     }
