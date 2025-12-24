@@ -12,6 +12,7 @@
  */
 
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
 import app from './app.js';
 
 // Load environment variables from .env file
@@ -71,5 +72,13 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-// Start the server
-startServer();
+
+// Start the server if running directly and NOT on Vercel
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
+const isVercel = process.env.VERCEL === '1' || process.env.NOW_BUILDER === '1';
+
+if (isMainModule && !isVercel) {
+  startServer();
+}
+
+export default app;

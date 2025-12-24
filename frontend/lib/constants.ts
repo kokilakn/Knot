@@ -20,4 +20,5 @@ export const MATCH_TIERS = {
 } as const;
 
 // Backend service URL (internal, never exposed to browser)
-export const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+export const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+

@@ -1,0 +1,12 @@
+{
+    "version": 2,
+    "framework": "nextjs",
+    "installCommand": "bun install",
+    "buildCommand": "bun run frontend:prod",
+    "rewrites": [
+        {
+            "source": "/api/faces/:path*",
+            "destination": "/api/faces/:path*"
+        }
+    ]
+}
