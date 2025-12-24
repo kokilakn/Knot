@@ -1,7 +1,6 @@
 import React from 'react';
 import styles from '../contribute.module.css';
 import { IconUpload, IconCamera } from '@/components/shared/Icons';
-import CameraIcon from '@mui/icons-material/Camera';
 
 interface SelectionGridProps {
     onUploadClick: () => void;

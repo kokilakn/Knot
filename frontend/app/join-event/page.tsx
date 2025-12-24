@@ -4,7 +4,6 @@ import PaperBackground from '@/components/PaperBackground';
 import { Button } from '@/components/ui';
 import styles from './join-event.module.css';
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { useUser } from '@/lib/UserContext';

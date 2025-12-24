@@ -185,10 +185,6 @@ export default function FindFacePage() {
         if (file) performSearch(file);
     };
 
-    const handleDownloadAll = async () => {
-        const urls = allPhotos.map(p => getPhotoUrl(p.link));
-        await downloadPhotos(urls, `${eventName.replace(/\s+/g, '-').toLowerCase()}-matches.zip`);
-    };
 
     const handleBulkDownload = async () => {
         const urls = allPhotos.filter(p => selectedIds.has(p.id)).map(p => getPhotoUrl(p.link));

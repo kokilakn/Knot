@@ -91,7 +91,7 @@ export async function POST(
         for (const file of files) {
             if (!(file instanceof File)) continue;
 
-            let buffer = Buffer.from(await file.arrayBuffer());
+            let buffer = Buffer.from(await file.arrayBuffer()) as Buffer;
             let contentType = file.type;
             let ext = file.name.split('.').pop() || 'jpg';
 
