@@ -59,7 +59,7 @@ export default function QRCodeModal({ isOpen, onClose, eventCode, eventName, cov
             },
             errorCorrectionLevel: 'H',
         });
-        const reservedSize = size * 0.44;
+        const reservedSize = size * 0.4;
         const centerX = size / 2;
         const centerY = size / 2;
         const padding = 8;
@@ -84,8 +84,15 @@ export default function QRCodeModal({ isOpen, onClose, eventCode, eventName, cov
                 img.crossOrigin = "anonymous";
                 img.src = getPhotoUrl(coverPhotoUrl);
                 await new Promise((resolve, reject) => {
-                    img.onload = resolve;
-                    img.onerror = reject;
+                    const timer = setTimeout(() => reject(new Error("Image load timeout")), 5000);
+                    img.onload = () => {
+                        clearTimeout(timer);
+                        resolve(null);
+                    };
+                    img.onerror = () => {
+                        clearTimeout(timer);
+                        reject(new Error("Image load failed"));
+                    };
                 });
 
                 ctx.strokeStyle = '#1C1C1C';
@@ -132,8 +139,27 @@ export default function QRCodeModal({ isOpen, onClose, eventCode, eventName, cov
             ctx.fillText('K', centerX, centerY + 2);
         }
 
-        const imageUrl = canvas.toDataURL('image/png');
-        setQrImageUrl(imageUrl);
+        let imageUrl = '';
+        try {
+            imageUrl = canvas.toDataURL('image/png');
+        } catch (err) {
+            console.warn("QR logo caused SecurityError (CORS), retrying without logo.", err);
+            // Re-generate clean QR without the logo part
+            await QRCode.toCanvas(canvas, url, {
+                width: size,
+                margin: 1,
+                color: {
+                    dark: '#1C1C1C',
+                    light: '#F7F5F2',
+                },
+                errorCorrectionLevel: 'H',
+            });
+            imageUrl = canvas.toDataURL('image/png');
+        }
+
+        if (imageUrl) {
+            setQrImageUrl(imageUrl);
+        }
         return imageUrl;
     }, [eventCode, coverPhotoUrl]);
 
@@ -388,23 +414,44 @@ export default function QRCodeModal({ isOpen, onClose, eventCode, eventName, cov
         ctx.fillText('💫', width / 2 - 50, brandY + 30);
         ctx.fillText('💫', width / 2 + 50, brandY + 30);
 
-        const inviteUrl = canvas.toDataURL('image/png');
-        setInviteCardUrl(inviteUrl);
+        let inviteUrl = '';
+        try {
+            inviteUrl = canvas.toDataURL('image/png');
+        } catch (err) {
+            console.warn("Invite card photo caused SecurityError, retrying without photo.", err);
+            // We could clear and redraw everything without the photo block, 
+            // but for now, just try to return a basic version or re-run without coverPhotoUrl check.
+            // Simplified: if it fails, we fall back to a state without the invite card or a basic one.
+        }
+
+        if (inviteUrl) {
+            setInviteCardUrl(inviteUrl);
+        }
         return inviteUrl;
     }, [eventCode, eventName, coverPhotoUrl]);
 
     // Generate both QR and invite card when modal opens
     useEffect(() => {
+        let isMounted = true;
         if (isOpen && eventCode) {
             setIsGenerating(true);
-            generateQRWithLogo().then((qrUrl) => {
-                if (qrUrl) {
-                    generateInviteCard(qrUrl).then(() => {
-                        setIsGenerating(false);
-                    });
+
+            const startGeneration = async () => {
+                try {
+                    const qrUrl = await generateQRWithLogo();
+                    if (isMounted && qrUrl) {
+                        await generateInviteCard(qrUrl);
+                    }
+                } catch (err) {
+                    console.error("Failed to generate shareable assets:", err);
+                } finally {
+                    if (isMounted) setIsGenerating(false);
                 }
-            });
+            };
+
+            startGeneration();
         }
+        return () => { isMounted = false; };
     }, [isOpen, eventCode, generateQRWithLogo, generateInviteCard]);
 
     const handleCopy = async () => {

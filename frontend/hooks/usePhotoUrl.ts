@@ -14,10 +14,5 @@ export function usePhotoUrl(link: string | undefined) {
 
 export function getPhotoUrl(link: string | undefined) {
     if (!link) return '';
-
-    if (isHeic(link)) {
-        return `/api/photos?link=${encodeURIComponent(link)}`;
-    }
-
     return link;
 }

@@ -52,28 +52,45 @@ function extractEventCode(scannedText: string): string {
     // If it's a URL, try to extract the event code from it
     try {
         const url = new URL(scannedText);
-        // Check for /event/CODE pattern
-        const pathMatch = url.pathname.match(/\/event\/([A-Z0-9]{10})/i);
-        if (pathMatch) {
-            return pathMatch[1].toUpperCase();
+        // Check for /event/ID pattern (ID can be 10-char code or UUID)
+        const pathParts = url.pathname.split('/');
+        const eventIndex = pathParts.findIndex(part => part.toLowerCase() === 'event');
+
+        if (eventIndex !== -1 && pathParts[eventIndex + 1]) {
+            const potentialCode = pathParts[eventIndex + 1];
+            // Validate if it's a 10-char code or UUID
+            if (/^[A-Z0-9]{10}$/i.test(potentialCode) ||
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(potentialCode)) {
+                return potentialCode.toUpperCase();
+            }
         }
+
         // Check for ?code=CODE parameter
         const codeParam = url.searchParams.get('code');
         if (codeParam) {
             return codeParam.toUpperCase();
         }
     } catch {
-        // Not a URL, treat as plain code
+        // Not a URL, treat as plain text
     }
 
-    // If it looks like a 10-character alphanumeric code, return it
-    const codeMatch = scannedText.match(/^[A-Z0-9]{10}$/i);
-    if (codeMatch) {
-        return scannedText.toUpperCase();
+    // Clean the input (remove whitespace)
+    const cleaned = scannedText.trim();
+
+    // If it looks like a 10-character alphanumeric code or UUID, return it
+    if (/^[A-Z0-9]{10}$/i.test(cleaned) ||
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleaned)) {
+        return cleaned.toUpperCase();
     }
 
-    // Fallback: return as-is (will likely fail validation)
-    return scannedText.toUpperCase();
+    // If it's a long string that looks like a URL but URL() failed (e.g. missing protocol)
+    if (cleaned.toLowerCase().includes('/event/')) {
+        const match = cleaned.match(/\/event\/([a-zA-Z0-9-]+)/i);
+        if (match) return match[1].toUpperCase();
+    }
+
+    // Fallback: return as-is
+    return cleaned.toUpperCase();
 }
 
 export default function JoinEventPage() {

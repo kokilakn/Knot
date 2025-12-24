@@ -4,6 +4,8 @@ import { events, eventParticipants } from "@/db/schema";
 import { eq, or } from "drizzle-orm";
 import { getSession, generateEventCode } from "@/lib/session";
 import { storage } from "@/lib/storage";
+import { isHeic, convertHeicToJpeg } from "@/lib/heic-converter";
+import { optimizeImage } from "@/lib/image-optimizer";
 
 // GET: Fetch events for current user (created by or participating in)
 export async function GET() {
@@ -117,13 +119,35 @@ export async function POST(request: NextRequest) {
         // Handle File Save
         if (coverFile) {
             try {
-                const buffer = Buffer.from(await coverFile.arrayBuffer());
-                // Use code as filename prefix, preserve extension
-                const ext = coverFile.name.split('.').pop() || 'jpg';
+                let buffer = Buffer.from(await coverFile.arrayBuffer()) as any;
+                let contentType = coverFile.type;
+                let ext = coverFile.name.split('.').pop() || 'jpg';
+
+                // Convert HEIC to JPEG
+                if (isHeic(coverFile.name) || contentType === 'image/heic' || contentType === 'image/heif') {
+                    try {
+                        const converted = await convertHeicToJpeg(buffer);
+                        buffer = Buffer.from(converted) as any;
+                        contentType = 'image/jpeg';
+                        ext = 'jpg';
+                    } catch (convErr) {
+                        console.error("HEIC conversion failed for cover photo:", convErr);
+                    }
+                }
+
+                // Optimize image
+                try {
+                    buffer = await optimizeImage(buffer);
+                    contentType = 'image/jpeg';
+                    ext = 'jpg';
+                } catch (optErr) {
+                    console.error("Image optimization failed for cover photo:", optErr);
+                }
+
                 const filename = `coverphotos/${code}.${ext}`;
 
                 // Upload via storage service
-                coverPageUrl = await storage.upload(buffer, filename, coverFile.type);
+                coverPageUrl = await storage.upload(buffer, filename, contentType);
             } catch (err) {
                 console.error("Error saving cover photo to R2:", err);
             }
